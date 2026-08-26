@@ -1,0 +1,9 @@
+{
+  "name": "gdelt-world-monitor",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ingest": "node scripts/ingest-local.mjs",
+    "serve": "python3 -m http.server 8080 -d docs"
+  }
+}

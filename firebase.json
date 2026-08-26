@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "source": "functions",
+    "predeploy": ["cp ingest/gdelt.mjs functions/gdelt.mjs"]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

@@ -1,0 +1,97 @@
+{
+ "generatedAt": "2026-08-26T12:00:00Z",
+ "query": "sample",
+ "sample": true,
+ "items": [
+  {
+   "id": "sample0",
+   "ts": "2026-08-26T12:00:00Z",
+   "title": "Protesters clash with police in central Nairobi over finance bill",
+   "url": "https://reuters.com",
+   "domain": "reuters.com",
+   "sourcecountry": "Kenya",
+   "language": "English"
+  },
+  {
+   "id": "sample1",
+   "ts": "2026-08-26T11:13:00Z",
+   "title": "Airstrikes reported overnight across Gaza as talks stall",
+   "url": "https://apnews.com",
+   "domain": "apnews.com",
+   "sourcecountry": "Israel",
+   "language": "English"
+  },
+  {
+   "id": "sample2",
+   "ts": "2026-08-26T10:26:00Z",
+   "title": "Kyiv hit by wave of drone strikes; air defences active",
+   "url": "https://bbc.com",
+   "domain": "bbc.com",
+   "sourcecountry": "Ukraine",
+   "language": "English"
+  },
+  {
+   "id": "sample3",
+   "ts": "2026-08-26T09:39:00Z",
+   "title": "Thousands march in Paris against pension reform rollback",
+   "url": "https://france24.com",
+   "domain": "france24.com",
+   "sourcecountry": "France",
+   "language": "English"
+  },
+  {
+   "id": "sample4",
+   "ts": "2026-08-26T08:52:00Z",
+   "title": "Sudan army and RSF trade shelling in Khartoum suburbs",
+   "url": "https://aljazeera.com",
+   "domain": "aljazeera.com",
+   "sourcecountry": "Sudan",
+   "language": "English"
+  },
+  {
+   "id": "sample5",
+   "ts": "2026-08-26T08:05:00Z",
+   "title": "Haiti gangs expand control as police station torched",
+   "url": "https://miamiherald.com",
+   "domain": "miamiherald.com",
+   "sourcecountry": "Haiti",
+   "language": "English"
+  },
+  {
+   "id": "sample6",
+   "ts": "2026-08-26T07:18:00Z",
+   "title": "Venezuela opposition calls nationwide protests over vote audit",
+   "url": "https://elpais.com",
+   "domain": "elpais.com",
+   "sourcecountry": "Venezuela",
+   "language": "English"
+  },
+  {
+   "id": "sample7",
+   "ts": "2026-08-26T06:31:00Z",
+   "title": "Serbia sees third week of anti-government demonstrations",
+   "url": "https://balkaninsight.com",
+   "domain": "balkaninsight.com",
+   "sourcecountry": "Serbia",
+   "language": "English"
+  },
+  {
+   "id": "sample8",
+   "ts": "2026-08-26T05:44:00Z",
+   "title": "Myanmar junta shells villages in Sagaing region",
+   "url": "https://irrawaddy.com",
+   "domain": "irrawaddy.com",
+   "sourcecountry": "Myanmar",
+   "language": "English"
+  },
+  {
+   "id": "sample9",
+   "ts": "2026-08-26T04:57:00Z",
+   "title": "Georgia protesters return to parliament over foreign agent law",
+   "url": "https://civil.ge",
+   "domain": "civil.ge",
+   "sourcecountry": "Georgia",
+   "language": "English"
+  }
+ ]
+}

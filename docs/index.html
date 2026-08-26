@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>World Monitor — GDELT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&display=swap" rel="stylesheet" />
+  <link href="vendor/maplibre-gl.css" rel="stylesheet" />
+  <link href="style.css" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%23f5a623'/></svg>" />
+</head>
+<body>
+  <header>
+    <h1>WORLD MONITOR <span class="accent">/ GDELT</span></h1>
+    <div id="status">loading…</div>
+    <button id="projection" title="Toggle globe / flat">GLOBE</button>
+  </header>
+  <main>
+    <div id="map"></div>
+    <aside id="wire">
+      <h2>WIRE</h2>
+      <ol id="wire-list"></ol>
+    </aside>
+  </main>
+  <script src="vendor/maplibre-gl.js"></script>
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

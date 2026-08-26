@@ -1,0 +1,335 @@
+{
+ "type": "FeatureCollection",
+ "meta": {
+  "generatedAt": "2026-08-26T12:00:00Z",
+  "query": "sample",
+  "count": 18,
+  "sample": true
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     2.35,
+     48.86
+    ]
+   },
+   "properties": {
+    "name": "Paris, France",
+    "mentions": 41,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.82,
+     -1.29
+    ]
+   },
+   "properties": {
+    "name": "Nairobi, Kenya",
+    "mentions": 58,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     34.78,
+     32.08
+    ]
+   },
+   "properties": {
+    "name": "Tel Aviv, Israel",
+    "mentions": 92,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     30.52,
+     50.45
+    ]
+   },
+   "properties": {
+    "name": "Kyiv, Ukraine",
+    "mentions": 120,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     36.23,
+     49.99
+    ]
+   },
+   "properties": {
+    "name": "Kharkiv, Ukraine",
+    "mentions": 64,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     34.47,
+     31.5
+    ]
+   },
+   "properties": {
+    "name": "Gaza",
+    "mentions": 150,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     32.53,
+     15.5
+    ]
+   },
+   "properties": {
+    "name": "Khartoum, Sudan",
+    "mentions": 47,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -72.34,
+     18.54
+    ]
+   },
+   "properties": {
+    "name": "Port-au-Prince, Haiti",
+    "mentions": 33,
+    "validated": true,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -66.9,
+     10.49
+    ]
+   },
+   "properties": {
+    "name": "Caracas, Venezuela",
+    "mentions": 28,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     73.09,
+     33.68
+    ]
+   },
+   "properties": {
+    "name": "Islamabad, Pakistan",
+    "mentions": 22,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     90.41,
+     23.81
+    ]
+   },
+   "properties": {
+    "name": "Dhaka, Bangladesh",
+    "mentions": 19,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     20.46,
+     44.79
+    ]
+   },
+   "properties": {
+    "name": "Belgrade, Serbia",
+    "mentions": 17,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -68.15,
+     -16.5
+    ]
+   },
+   "properties": {
+    "name": "La Paz, Bolivia",
+    "mentions": 12,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     3.39,
+     6.45
+    ]
+   },
+   "properties": {
+    "name": "Lagos, Nigeria",
+    "mentions": 9,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     96.16,
+     16.87
+    ]
+   },
+   "properties": {
+    "name": "Yangon, Myanmar",
+    "mentions": 26,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     44.83,
+     41.72
+    ]
+   },
+   "properties": {
+    "name": "Tbilisi, Georgia",
+    "mentions": 14,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     120.98,
+     14.6
+    ]
+   },
+   "properties": {
+    "name": "Manila, Philippines",
+    "mentions": 7,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     23.73,
+     37.98
+    ]
+   },
+   "properties": {
+    "name": "Athens, Greece",
+    "mentions": 6,
+    "validated": false,
+    "cameo": null,
+    "goldstein": null,
+    "tone": null
+   }
+  }
+ ]
+}
