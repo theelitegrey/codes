@@ -11,6 +11,11 @@ import type { ShortProps } from "../../remotion/props.js";
  * folder so props can reference media by relative path via staticFile().
  */
 export async function renderShort(props: ShortProps, projectDir: string, outFile: string, opts: { concurrency?: number; onProgress?: (p: number) => void } = {}): Promise<string> {
+  return renderComposition("Short", props as unknown as Record<string, unknown>, projectDir, outFile, opts);
+}
+
+/** Render any registered composition with the given input props. */
+export async function renderComposition(id: string, props: Record<string, unknown>, projectDir: string, outFile: string, opts: { concurrency?: number; onProgress?: (p: number) => void } = {}): Promise<string> {
   log.info("bundling Remotion project");
   const serveUrl = await bundle({ entryPoint: REMOTION_ENTRY, publicDir: projectDir, webpackOverride: (c) => ({
       ...c,
@@ -19,7 +24,7 @@ export async function renderShort(props: ShortProps, projectDir: string, outFile
     }) });
   // Optional: reuse a system Chromium instead of letting Remotion download its headless shell.
   const browserExecutable = env("REMOTION_BROWSER_EXECUTABLE") ?? null;
-  const composition = await selectComposition({ serveUrl, id: "Short", inputProps: props, browserExecutable });
+  const composition = await selectComposition({ serveUrl, id, inputProps: props, browserExecutable });
   log.info(`rendering ${composition.width}x${composition.height} @ ${composition.fps}fps, ${composition.durationInFrames} frames`);
   let last = -1;
   await renderMedia({

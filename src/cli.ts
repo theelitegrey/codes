@@ -16,6 +16,7 @@ import { intakeAgent } from "./agents/legacy/intake.js";
 import { runScriptAgent } from "./agents/script/run.js";
 import { runTextAgent } from "./agents/text/run.js";
 import { runAudioAgent } from "./agents/audio/run.js";
+import { runMotionAgent } from "./agents/motion/run.js";
 
 loadDotEnv();
 
@@ -145,6 +146,22 @@ agent
   .option("--out <dir>", "output folder", "./output/agents")
   .action(async (scriptFile: string, o) => {
     await runAudioAgent({ scriptFile, out: o.out, platform: o.platform, audience: o.audience, brand: o.brand, tone: o.tone, category: o.category, voice: o.voice, music: o.music, noMusic: o.music === false, noSfx: o.sfx === false, notes: o.notes });
+  });
+
+agent
+  .command("motion")
+  .description("Motion Graphics Agent (Claude Fable 5.1): script.json → motion.json built from the Remotion component catalog; --render writes preview mp4s per beat")
+  .argument("<script.json>")
+  .option("--beats <ids...>", "only these beat ids")
+  .option("--style <text>", "visual style brief")
+  .option("--notes <text>", "extra constraints")
+  .option("--timing <timeline.json>", "Audio Agent timeline to use measured beat times")
+  .option("--width <px>", "stage width", (v) => Number(v), 1080)
+  .option("--height <px>", "stage height", (v) => Number(v), 1080)
+  .option("--render", "render preview mp4 per beat")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (scriptFile: string, o) => {
+    await runMotionAgent({ scriptFile, out: o.out, beats: o.beats, style: o.style, notes: o.notes, timingFile: o.timing, render: Boolean(o.render), width: o.width, height: o.height });
   });
 
 program.command("modes").description("List composition modes").action(() => {

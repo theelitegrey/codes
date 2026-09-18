@@ -3,6 +3,8 @@ import { Composition } from "remotion";
 import { ShortComposition } from "./ShortComposition.js";
 import { ShortProps } from "./props.js";
 import { BUILTIN_PRESETS } from "../src/presets/schema.js";
+import { MotionPreview } from "./motion/MotionStage.js";
+import { MotionPreviewProps } from "./motion/schema.js";
 
 const demoPreset = BUILTIN_PRESETS.PODCAST_SHORT;
 
@@ -19,7 +21,34 @@ const demoProps: ShortProps = {
   captions: { source: "estimated", words: [] },
 };
 
+const demoMotion: MotionPreviewProps = {
+  from: 0,
+  to: 6,
+  plan: {
+    width: 1080,
+    height: 1080,
+    fps: 30,
+    theme: { bg: "#0B0E14", fg: "#F4F6FA", muted: "#8A93A6", accent: "#4F8CFF", up: "#22D3A5", down: "#FF5A5A", warn: "#FFD84D", font: "Inter, Arial, sans-serif", mono: "JetBrains Mono, Menlo, monospace" },
+    beats: [{ beat_id: "demo", start: 0, end: 6, concept: "sweep", transition_in: "fade", layers: [{ id: "l1", kind: "LiquiditySweep", start: 0, end: 6, rect: { x: 0, y: 0, w: 1, h: 1 }, z: 0, level_label: "PREVIOUS HIGH", sweep_label: "SWEEP", direction: "high", reversal_label: "REVERSAL", stages: { approach: 0.25, break: 0.4, wick: 0.5, label: 0.6, reverse: 0.85 } }] }],
+  },
+};
+
 export const Root: React.FC = () => (
+  <>
+  <Composition
+    id="MotionPreview"
+    component={MotionPreview}
+    schema={MotionPreviewProps}
+    defaultProps={demoMotion}
+    width={1080}
+    height={1080}
+    fps={30}
+    durationInFrames={180}
+    calculateMetadata={({ props }) => {
+      const p = props as MotionPreviewProps;
+      return { width: p.plan.width, height: p.plan.height, fps: p.plan.fps, durationInFrames: Math.max(1, Math.ceil((p.to - p.from) * p.plan.fps)) };
+    }}
+  />
   <Composition
     id="Short"
     component={ShortComposition}
@@ -35,4 +64,5 @@ export const Root: React.FC = () => (
       return { width: p.preset.width, height: p.preset.height, fps: p.preset.fps, durationInFrames: Math.max(1, Math.ceil(total * p.preset.fps)) };
     }}
   />
+  </>
 );
