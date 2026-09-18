@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { Scene, SceneList } from "../src/core/scene.js";
-import { normaliseScenes } from "../src/agents/visualDirector.js";
+import { normaliseScenes } from "../src/agents/legacy/visualDirector.js";
 import { getModePreset } from "../src/presets/modes.js";
 import { layoutFor } from "../remotion/layout.js";
 import { estimateCaptionTrack, toSrt } from "../src/media/captions.js";
-import { applyRetentionAdjustments } from "../src/agents/retention.js";
+import { applyRetentionAdjustments } from "../src/agents/legacy/retention.js";
 
 const base = (id: number, type: Scene["main_visual"]["type"], enabled = true): Scene =>
   Scene.parse({ scene_id: id, duration: 4, narration: `Scene ${id} narration words here.`, presenter: { enabled, position: "bottom", size: "medium" }, main_visual: { type, headline: type === "headline" ? "H" : undefined } });

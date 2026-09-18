@@ -1,5 +1,5 @@
-import { LLM } from "../providers/llm/llm.js";
-import { Metadata, type Script, type ShortRequest } from "../core/project.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { Metadata, type Script, type ShortRequest } from "../../core/project.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 export async function metadataAgent(llm: LLM, req: ShortRequest, script: Script): Promise<Metadata> {

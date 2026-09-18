@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PresenterProfileStore } from "../src/config/presenters.js";
 import { VoiceConfigStore } from "../src/config/voices.js";
 import { parseModeFromText, getModePreset, listModes } from "../src/presets/modes.js";
-import { parseDurationFromText, intakeAgent, stripInstructionPhrases } from "../src/agents/intake.js";
+import { parseDurationFromText, intakeAgent, stripInstructionPhrases } from "../src/agents/legacy/intake.js";
 
 const presenters = new PresenterProfileStore();
 const voices = new VoiceConfigStore();

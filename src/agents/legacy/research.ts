@@ -1,5 +1,5 @@
-import { LLM } from "../providers/llm/llm.js";
-import { ResearchResult, type ShortRequest } from "../core/project.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { ResearchResult, type ShortRequest } from "../../core/project.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 export async function researchAgent(llm: LLM, req: ShortRequest): Promise<ResearchResult> {

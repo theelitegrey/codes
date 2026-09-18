@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { LLM } from "../providers/llm/llm.js";
-import { ShortRequest } from "../core/project.js";
-import { PresenterProfileStore } from "../config/presenters.js";
-import { VoiceConfigStore } from "../config/voices.js";
-import { parseModeFromText } from "../presets/modes.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { ShortRequest } from "../../core/project.js";
+import { PresenterProfileStore } from "../../config/presenters.js";
+import { VoiceConfigStore } from "../../config/voices.js";
+import { parseModeFromText } from "../../presets/modes.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 const IntakeSchema = z.object({

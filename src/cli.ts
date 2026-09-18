@@ -12,7 +12,8 @@ import { createAvatarProvider, listAvatarProviders } from "./providers/avatar/in
 import { listModes, getModePreset } from "./presets/modes.js";
 import { commandExists } from "./media/ffmpeg.js";
 import { ShortMode, type ProjectState } from "./core/project.js";
-import { intakeAgent } from "./agents/intake.js";
+import { intakeAgent } from "./agents/legacy/intake.js";
+import { runScriptAgent } from "./agents/script/run.js";
 
 loadDotEnv();
 
@@ -90,6 +91,26 @@ voices
     const p = createVoiceProvider(cfg);
     const r = await p.synthesize({ text: o.text, voice: cfg, outPath: path.resolve(o.out) });
     console.log(`${r.path} (${r.duration_sec.toFixed(2)}s via ${r.provider})`);
+  });
+
+const agent = program.command("agent").description("Run a single agent in isolation");
+agent
+  .command("script")
+  .description("Script Agent: research → hooks → timed beats → review, writes <out>/script/script.json")
+  .argument("<topic>")
+  .option("--platform <p>", "youtube_shorts|tiktok|instagram_reels|youtube|x", "youtube_shorts")
+  .option("--duration <sec>", "target duration", (v) => Number(v), 45)
+  .option("--audience <text>", "target audience")
+  .option("--category <text>", "content category")
+  .option("--brand <text>", "brand / personality")
+  .option("--tone <text>", "desired tone")
+  .option("--notes <text>", "extra constraints")
+  .option("--research <file>", "optional research text file")
+  .option("--previous <files...>", "previous successful scripts (files)")
+  .option("--no-web", "disable web research")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (topic: string, o) => {
+    await runScriptAgent({ topic, platform: o.platform, duration_sec: o.duration, audience: o.audience, category: o.category, brand: o.brand, tone: o.tone, notes: o.notes, researchFile: o.research, previousFiles: o.previous, web_research: o.web !== false, out: o.out });
   });
 
 program.command("modes").description("List composition modes").action(() => {

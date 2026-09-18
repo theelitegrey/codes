@@ -7,7 +7,7 @@ import { createVisualProvider } from "../providers/visuals/index.js";
 import type { VoiceProvider } from "../providers/voice/VoiceProvider.js";
 import type { AvatarVideoProvider } from "../providers/avatar/AvatarVideoProvider.js";
 import type { VisualAssetProvider } from "../providers/visuals/VisualAssetProvider.js";
-import { intakeAgent } from "../agents/intake.js";
+import { intakeAgent } from "../agents/legacy/intake.js";
 import { runPipeline, type PipelineOptions } from "../pipeline/runPipeline.js";
 import type { ProjectState, ShortRequest } from "../core/project.js";
 

@@ -1,6 +1,6 @@
-import { LLM } from "../providers/llm/llm.js";
-import { RetentionReview } from "../core/project.js";
-import type { Scene } from "../core/scene.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { RetentionReview } from "../../core/project.js";
+import type { Scene } from "../../core/scene.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 export async function retentionAgent(llm: LLM, scenes: Scene[], totalDuration: number): Promise<RetentionReview> {

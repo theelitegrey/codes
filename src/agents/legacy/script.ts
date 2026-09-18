@@ -1,5 +1,5 @@
-import { LLM } from "../providers/llm/llm.js";
-import { Script, type HookSet, type ResearchResult, type ShortRequest } from "../core/project.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { Script, type HookSet, type ResearchResult, type ShortRequest } from "../../core/project.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 /** Conversational narration averages ~2.6 words per second. */

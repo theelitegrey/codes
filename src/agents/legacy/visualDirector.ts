@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { LLM } from "../providers/llm/llm.js";
-import { Scene, SceneList } from "../core/scene.js";
-import type { Script, ShortRequest } from "../core/project.js";
-import type { ModePreset } from "../presets/modes.js";
-import type { PresenterProfile } from "../config/presenters.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { Scene, SceneList } from "../../core/scene.js";
+import type { Script, ShortRequest } from "../../core/project.js";
+import type { ModePreset } from "../../presets/modes.js";
+import type { PresenterProfile } from "../../config/presenters.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 const VisualPlan = z.object({ scenes: SceneList });

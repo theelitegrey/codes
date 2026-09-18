@@ -1,5 +1,5 @@
-import { LLM } from "../providers/llm/llm.js";
-import { FactCheckResult, type ResearchResult, type Script } from "../core/project.js";
+import { LLM } from "../../providers/llm/llm.js";
+import { FactCheckResult, type ResearchResult, type Script } from "../../core/project.js";
 import { CHANNEL_BRIEF } from "./prompts.js";
 
 export async function factCheckAgent(llm: LLM, script: Script, research: ResearchResult): Promise<FactCheckResult> {
