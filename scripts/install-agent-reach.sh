@@ -47,6 +47,13 @@ if ! command -v yt-dlp >/dev/null 2>&1; then
   fi
 fi
 
+# 2b. yt-dlp needs a JS runtime for YouTube; point it at node (idempotent)
+if command -v yt-dlp >/dev/null 2>&1 && command -v node >/dev/null 2>&1; then
+  mkdir -p "$HOME/.config/yt-dlp"
+  grep -qxF -- '--js-runtimes node' "$HOME/.config/yt-dlp/config" 2>/dev/null \
+    || printf '%s\n' '--js-runtimes node' >> "$HOME/.config/yt-dlp/config"
+fi
+
 # 3. Skill for all repos. agent-reach only writes into skill roots that
 #    already exist, so create the Claude Code one first.
 mkdir -p "$HOME/.claude/skills"
