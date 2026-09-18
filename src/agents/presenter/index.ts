@@ -97,7 +97,7 @@ export class PresenterAgent {
 }
 
 /** Removes the flat key-colour backdrop and writes a ProRes 4444 file with alpha for the Composer. */
-export async function chromaKeyToAlpha(inFile: string, outFile: string, color: string = KEY_COLOR.hex, similarity = 0.18, blend = 0.08): Promise<void> {
+export async function chromaKeyToAlpha(inFile: string, outFile: string, color: string = KEY_COLOR.hex, similarity = 0.12, blend = 0.04): Promise<void> {
   const r = await run(ffmpegBin(), ["-y", "-i", inFile, "-vf", `format=yuv444p,chromakey=${color}:${similarity}:${blend},despill=type=green:mix=0.6:expand=0.2,format=yuva444p10le`, "-c:v", "prores_ks", "-profile:v", "4444", "-pix_fmt", "yuva444p10le", "-an", outFile]);
   if (r.code !== 0) throw new Error(`chroma key failed: ${r.stderr.slice(-1200)}`);
   const info = await probe(outFile);
