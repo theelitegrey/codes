@@ -1,10 +1,14 @@
-# Master Admin Panel
+# codes
+
+Two things live here: the **Master Admin Panel** (a self-hosted dashboard for your websites, subscriptions and expenses) and the **Agent-Reach** setup for Claude Code sessions.
+
+## Master Admin Panel
 
 One private dashboard for everything you run on the web: **what it costs, when it renews, whether it is up, how healthy it is, and who is visiting.** Zero dependencies, one `node server.js`, data stored as JSON files.
 
 ![Dashboard](docs/dashboard.png)
 
-## What it does
+### What it does
 
 | Area | Details |
 |---|---|
@@ -17,7 +21,7 @@ One private dashboard for everything you run on the web: **what it costs, when i
 | **Tasks** | Per-site to-do list with due dates; one-click "add task" from any audit finding. |
 | **Admin** | Password login (scrypt-hashed, HttpOnly session cookie), settings for intervals and currency, JSON export / import, dark mode, mobile layout. |
 
-## Run it
+### Run it
 
 ```bash
 git clone <this repo> && cd codes
@@ -55,7 +59,7 @@ Paste this before `</body>` on each site (the exact snippet with the right site 
 
 It records path, referrer host and device class only. Unique visitors are a salted hash that rotates daily, so nothing personal is stored.
 
-## Project layout
+### Project layout
 
 ```
 server.js         HTTP server, auth, REST API, tracker collector, scheduler
@@ -68,6 +72,32 @@ public/           Single-page UI (no build step): app.js core, views.js screens
 test/             node:test unit tests  →  npm test
 ```
 
-## API
+### API
 
 All routes under `/api` require the session cookie except `auth/*`. Main resources: `sites`, `subscriptions`, `tasks`, `settings`, `summary`, `calendar`, `alerts`, `export`, `import`. Trigger an audit with `POST /api/sites/:id/audit` or `POST /api/audit/all`. `GET /healthz` is unauthenticated for your uptime monitor of the panel itself.
+
+## Agent-Reach
+
+[Agent-Reach](https://github.com/Panniantong/Agent-Reach) gives Claude Code internet
+access (web pages, RSS, GitHub, YouTube, Twitter/X, Reddit, and more).
+
+### Install for ALL Claude Code sessions (any repo)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/theelitegrey/codes/master/scripts/install-agent-reach.sh | bash
+```
+
+This installs the `agent-reach` CLI and `yt-dlp`, registers the skill at
+`~/.claude/skills/agent-reach`, and adds a user-level SessionStart hook to
+`~/.claude/settings.json` so new machines/containers self-heal.
+
+- **Claude Code on the web:** paste the line above into your Environment's setup
+  script (claude.ai/code -> Settings -> Environments). It then runs for every
+  session in that environment, whatever repo it opens.
+- **Local machine:** run the line once in a terminal.
+
+### This repo
+
+`.claude/hooks/session-start.sh` calls the same installer on Claude Code on the
+web, and `.claude/skills/agent-reach/` keeps a committed copy of the skill.
+Check channel status any time with `agent-reach doctor`.
