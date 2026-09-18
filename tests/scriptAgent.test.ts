@@ -8,8 +8,8 @@ const hooks = { hooks: Array.from({ length: 5 }, (_, i) => ({ category: "curiosi
 const script = {
   duration: 45, hook: hooks.hooks[0].text, cta: "Follow for more.",
   beats: [
-    { id: "beat_01", start: 0, end: 4, narration: hooks.hooks[0].text, purpose: "hook", visual_intent: "Show a wick poking above a high.", claim_kinds: [] },
-    { id: "beat_02", start: 4, end: 12, narration: "Most traders see a spike and think it's noise. It's usually a stop hunt.", purpose: "problem", visual_intent: "Show stops clustering above a high.", claim_kinds: ["FACT"] },
+    { id: "beat_01", start: 0, end: 5, narration: hooks.hooks[0].text, purpose: "hook", visual_intent: "Show a wick poking above a high.", claim_kinds: [] },
+    { id: "beat_02", start: 5, end: 12, narration: "Most traders see a spike and think it's noise. It's usually a stop hunt.", purpose: "problem", visual_intent: "Show stops clustering above a high.", claim_kinds: ["FACT"] },
     { id: "beat_03", start: 12, end: 28, narration: "Price pushes through the level, triggers the resting orders, then snaps back into the range. That is the sweep.", purpose: "explanation", visual_intent: "Show the liquidity sweep happening.", claim_kinds: ["FACT", "INTERPRETATION"] },
     { id: "beat_04", start: 28, end: 38, narration: "The tell is a fast reclaim. No reclaim, no sweep, just a breakout.", purpose: "distinction", visual_intent: "Contrast reclaim versus breakout.", claim_kinds: ["INTERPRETATION"] },
     { id: "beat_05", start: 38, end: 45, narration: "Wait for the reclaim before you act. Follow for more.", purpose: "cta", visual_intent: "Show the reclaim then CTA.", claim_kinds: [] },
@@ -36,7 +36,7 @@ describe("Script Agent", () => {
     expect(a.hooks.hooks.length).toBeGreaterThanOrEqual(5);
     expect(a.script.beats[0].purpose).toBe("hook");
     expect(a.script.beats[0].narration).toBe(hooks.hooks[0].text);
-    expect(timeline(a.script.beats)).toMatch(/^00–04s {2}hook/);
+    expect(timeline(a.script.beats)).toMatch(/^00–05s {2}hook/);
   });
   it("rejects beats that do not tile the duration or overrun their timing", () => {
     expect(() => validateScript(script as never, 45)).not.toThrow();
