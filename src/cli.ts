@@ -19,6 +19,9 @@ import { runAudioAgent } from "./agents/audio/run.js";
 import { runMotionAgent } from "./agents/motion/run.js";
 import { runIllustrationAgent } from "./agents/illustration/run.js";
 import { runPresenterAgent } from "./agents/presenter/run.js";
+import { runCaptionsAgent } from "./agents/captions/run.js";
+import { runComposer } from "./agents/composer/run.js";
+import { ProjectDirector } from "./director/ProjectDirector.js";
 
 loadDotEnv();
 
@@ -196,6 +199,54 @@ agent
   .option("--out <dir>", "output folder", "./output/agents")
   .action(async (scriptFile: string, o) => {
     await runPresenterAgent({ scriptFile, audioDir: o.audio, out: o.out, profile: o.profile, mode: o.mode, background: o.background, fullframe: o.fullframe, noGenerate: o.generate === false, notes: o.notes });
+  });
+
+agent
+  .command("captions")
+  .description("Captions Agent (Claude Fable 5.1): final narration → whisper.cpp/VoiceStudio word timings → styled caption pages (captions.json + .srt)")
+  .requiredOption("--audio <dir>", "Audio Agent output folder (narration.wav + timeline.json)")
+  .option("--script <script.json>", "script for spelling alignment")
+  .option("--style <name>", "Clean|Bold|Podcast|Karaoke|Minimal|Trading|Cinematic|News", "Podcast")
+  .option("--mode <mode>", "verbatim|condensed (default from style)")
+  .option("--language <code>", "language", "en")
+  .option("--notes <text>", "extra direction")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (o) => {
+    await runCaptionsAgent({ audioDir: o.audio, out: o.out, scriptFile: o.script, style: o.style, mode: o.mode, language: o.language, notes: o.notes });
+  });
+
+agent
+  .command("compose")
+  .description("Composer (Claude Fable 5.1): build the master timeline from a project manifest, render with Remotion + FFmpeg, run QA")
+  .argument("<projectDir>")
+  .option("--preview", "also render a half-size preview")
+  .option("--fps <n>", "30 or 60", (v) => Number(v) as 30 | 60)
+  .option("--no-review", "skip the LLM layout review")
+  .action(async (projectDir: string, o) => {
+    await runComposer({ projectDir, preview: Boolean(o.preview), fps: o.fps, noReview: o.review === false });
+  });
+
+program
+  .command("produce")
+  .description('Director: run every agent into a project folder and render the final MP4. e.g. shorts produce "Create a 45-second Short explaining NQ liquidity sweeps. Use my default presenter."')
+  .argument("<instruction>")
+  .option("--audience <text>", "target audience")
+  .option("--category <text>", "content category")
+  .option("--brand <text>", "brand / personality")
+  .option("--tone <text>", "tone")
+  .option("--captions <style>", "caption style preset", "Podcast")
+  .option("--platform <p>", "youtube_shorts|tiktok|instagram_reels", "youtube_shorts")
+  .option("--fps <n>", "30 or 60", (v) => Number(v) as 30 | 60, 30)
+  .option("--generate-illustrations", "generate AI assets (needs a registry adapter)")
+  .option("--preview", "also render a preview")
+  .option("--stop-after <stage>", "script|parallel|presenter|illustration|captions")
+  .option("--out <dir>", "projects root (default <SHORTS_OUTPUT_DIR>/projects)")
+  .action(async (instruction: string, o) => {
+    const { project, result } = await new ProjectDirector().produce(instruction, { outputRoot: o.out, brand: { caption_style: o.captions, platform: o.platform, fps: o.fps }, scriptInput: { audience: o.audience, category: o.category, brand: o.brand, tone: o.tone }, stopAfter: o.stopAfter, preview: Boolean(o.preview), generateIllustrations: Boolean(o.generateIllustrations) });
+    console.log(`
+project: ${project.dir}`);
+    if (result) console.log(`final: ${result.final}
+QA: ${result.qa.passed ? "PASS" : "FAIL — " + result.qa.checks.filter((c) => !c.passed).map((c) => c.name).join(", ")}`);
   });
 
 program.command("modes").description("List composition modes").action(() => {

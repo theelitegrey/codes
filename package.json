@@ -4,8 +4,12 @@
   "description": "Podcast-style YouTube Shorts generator: research → script → VoiceStudio narration → LongCat-Video-Avatar presenter → Remotion/FFmpeg composition.",
   "type": "module",
   "private": true,
-  "engines": { "node": ">=20" },
-  "bin": { "shorts": "./bin/shorts.js" },
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "shorts": "./bin/shorts.js"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -13,12 +17,15 @@
     "shorts": "tsx src/cli.ts",
     "remotion:studio": "remotion studio remotion/index.ts",
     "doctor": "tsx src/cli.ts doctor",
-    "e2e:fixture": "tsx scripts/e2e-fixture.ts"
+    "e2e:fixture": "tsx scripts/e2e-fixture.ts",
+    "e2e:project": "tsx scripts/e2e-project.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",
     "@remotion/bundler": "^4.0.526",
+    "@remotion/captions": "^4.0.526",
     "@remotion/cli": "^4.0.526",
+    "@remotion/install-whisper-cpp": "^4.0.526",
     "@remotion/renderer": "^4.0.526",
     "commander": "^15.0.0",
     "react": "^19.1.0",
@@ -29,8 +36,8 @@
   "devDependencies": {
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
-    "typescript": "^5.9.0",
     "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
     "vitest": "^3.2.0"
   }
 }

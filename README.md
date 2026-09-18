@@ -19,7 +19,38 @@ description, caption and hashtags.
 └─────────────────────────┘
 ```
 
-## Pipeline
+## Agent architecture (current)
+
+Eight single-task agents write into a shared project manifest; the Director
+runs the DAG and the Composer merges everything on one master timeline.
+
+```
+USER → DIRECTOR → SCRIPT → (TEXT ‖ AUDIO ‖ MOTION) → PRESENTER → ILLUSTRATION → CAPTIONS → COMPOSER → QA → FINAL MP4
+                                     │                    ▲
+                                VoiceStudio           LongCat (from the FINAL narration)
+```
+
+| Agent | Model / tech | Command |
+|---|---|---|
+| Script | Claude (research, hooks, timed beats, review) | `shorts agent script "<topic>"` |
+| Text | Claude (on-screen text hierarchy, chains, safe areas) | `shorts agent text script.json` |
+| Audio | Claude + VoiceStudio + FFmpeg (pauses, ducked music, SFX, loudness master) | `shorts agent audio script.json` |
+| Motion Graphics | Claude Fable 5.1 + Remotion component library | `shorts agent motion script.json --render` |
+| Illustration | Claude Fable 5.1 + model registry (diffusers / HF Inference / LongCat-Video) | `shorts agent illustration script.json` |
+| Presenter | LongCat-Video-Avatar-1.5 (from final narration, keyed alpha) | `shorts agent presenter script.json --audio out/audio` |
+| Captions | Claude Fable 5.1 + whisper.cpp / VoiceStudio timings | `shorts agent captions --audio out/audio --script script.json` |
+| Composer | Claude Fable 5.1 + Remotion + FFmpeg (master timeline, layout, QA) | `shorts agent compose <projectDir>` |
+| Director | runs all of the above into `output/projects/<id>/` | `shorts produce "<instruction>"` |
+
+Project layout: `project.json` (manifest) plus `script/ text/ audio/ motion/
+illustration/ presenter/ captions/ composition/ renders/ qa/`. The Composer
+reads only the manifest; agents never call each other. Every agent's role
+spec lives in `src/agents/<name>/role.md`.
+
+End-to-end with no external services: `npm run e2e:project` (stub LLMs,
+espeak narration, synthetic keyed host) renders `output/e2e-projects/<id>/renders/final.mp4`.
+
+## Legacy pipeline
 
 ```
 USER IDEA → SHORTS DIRECTOR → RESEARCH → HOOKS → SCRIPT → FACT CHECK → VISUAL DIRECTOR

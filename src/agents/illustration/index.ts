@@ -120,7 +120,7 @@ export function lintPlan(plan: IllustrationPlan, input: IllustrationAgentInput):
   for (const id of ids) if (!plan.decisions.some((d) => d.beat_id === id)) p.push(`${id}: missing decision`);
   for (const d of plan.decisions) {
     if (!ids.includes(d.beat_id)) p.push(`${d.beat_id}: unknown beat`);
-    if (input.motion_beat_ids.includes(d.beat_id) && !["motion", "chart", "text"].includes(d.need)) p.push(`${d.beat_id}: Motion Graphics covers this beat; need must be motion/chart, not ${d.need}`);
+    if (input.motion_beat_ids.includes(d.beat_id) && !["motion", "chart", "text", "none"].includes(d.need)) p.push(`${d.beat_id}: Motion Graphics covers this beat; need must be motion/chart/text/none, not ${d.need}`);
     if ((d.need === "ai_image" || d.need === "ai_video" || d.need === "library") && d.prompt.trim().length < 12) p.push(`${d.beat_id}: ${d.need} needs a real prompt/keywords`);
     if ((d.need === "ai_image" || d.need === "ai_video") && /\b(chart|candlestick|graph|text|logo|caption)\b/i.test(d.prompt)) p.push(`${d.beat_id}: AI prompt must not ask for charts, text or logos`);
     if (d.need === "ai_video" && d.ladder.length < 4) p.push(`${d.beat_id}: ai_video requires walking the full ladder (list each step)`);

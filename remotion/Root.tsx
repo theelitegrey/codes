@@ -1,10 +1,13 @@
 import React from "react";
+import { z } from "zod";
 import { Composition } from "remotion";
 import { ShortComposition } from "./ShortComposition.js";
 import { ShortProps } from "./props.js";
 import { BUILTIN_PRESETS } from "../src/presets/schema.js";
 import { MotionPreview } from "./motion/MotionStage.js";
 import { MotionPreviewProps } from "./motion/schema.js";
+import { ComposedShort } from "./composition/ComposedShort.js";
+import { MasterTimeline } from "./composition/schema.js";
 
 const demoPreset = BUILTIN_PRESETS.PODCAST_SHORT;
 
@@ -33,8 +36,27 @@ const demoMotion: MotionPreviewProps = {
   },
 };
 
+const ComposedProps = z.object({ timeline: MasterTimeline });
+const demoTimeline: z.infer<typeof ComposedProps> = {
+  timeline: { width: 1080, height: 1920, fps: 30, duration: 3, audio_src: "", theme: demoMotion.plan.theme, scenes: [{ scene: 1, beat_id: "demo", start: 0, end: 3, duration: 3, transition_in: "cut", reserved: [], caption_rect: null, layers: [{ id: "bg", type: "background", z: 0, start: 0, end: 3, rect: { x: 0, y: 0, w: 1080, h: 1920 }, style: "clean_dark", accent: "#4F8CFF", motion: "subtle" }] }], events: [] },
+};
+
 export const Root: React.FC = () => (
   <>
+  <Composition
+    id="ComposedShort"
+    component={ComposedShort}
+    schema={ComposedProps}
+    defaultProps={demoTimeline}
+    width={1080}
+    height={1920}
+    fps={30}
+    durationInFrames={90}
+    calculateMetadata={({ props }) => {
+      const p = props as z.infer<typeof ComposedProps>;
+      return { width: p.timeline.width, height: p.timeline.height, fps: p.timeline.fps, durationInFrames: Math.max(1, Math.ceil(p.timeline.duration * p.timeline.fps)) };
+    }}
+  />
   <Composition
     id="MotionPreview"
     component={MotionPreview}
