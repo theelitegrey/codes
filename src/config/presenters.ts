@@ -26,6 +26,13 @@ export const PresenterProfile = z.object({
   reference_images: z.array(z.string()).min(1),
   /** Preferred voice config id (config/voice/<id>.json); the user can override per request. */
   default_voice_id: z.string().default("default"),
+  /** Face / body references (relative to config/presenter/); default to reference_images[0]. */
+  face_reference: z.string().optional(),
+  body_reference: z.string().optional(),
+  /** How the host comes across on camera; used by the Presenter Agent's delivery choices. */
+  personality: z.string().default("engaged, direct, respects the viewer's time"),
+  /** keyable: flat green backdrop keyed out by the Composer; styled: a real environment from background_style. */
+  background_mode: z.enum(["keyable", "styled"]).default("keyable"),
 });
 export type PresenterProfile = z.infer<typeof PresenterProfile>;
 

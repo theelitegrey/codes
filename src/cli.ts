@@ -17,6 +17,8 @@ import { runScriptAgent } from "./agents/script/run.js";
 import { runTextAgent } from "./agents/text/run.js";
 import { runAudioAgent } from "./agents/audio/run.js";
 import { runMotionAgent } from "./agents/motion/run.js";
+import { runIllustrationAgent } from "./agents/illustration/run.js";
+import { runPresenterAgent } from "./agents/presenter/run.js";
 
 loadDotEnv();
 
@@ -162,6 +164,38 @@ agent
   .option("--out <dir>", "output folder", "./output/agents")
   .action(async (scriptFile: string, o) => {
     await runMotionAgent({ scriptFile, out: o.out, beats: o.beats, style: o.style, notes: o.notes, timingFile: o.timing, render: Boolean(o.render), width: o.width, height: o.height });
+  });
+
+agent
+  .command("illustration")
+  .description("Illustration Agent (Claude Fable 5.1): decision ladder per beat → prompts; --generate creates assets with the best available registry model")
+  .argument("<script.json>")
+  .option("--motion <motion.json>", "Motion Graphics plan (beats it covers stop at motion/chart)")
+  .option("--text <text.json>", "Text plan (beats with a level-1 headline may stop at text)")
+  .option("--style <text>", "visual style brief")
+  .option("--notes <text>", "extra constraints")
+  .option("--generate", "generate assets now")
+  .option("--non-commercial", "allow non-commercial models")
+  .option("--vram <gb>", "local VRAM available (default ILLUSTRATION_VRAM_GB)", (v) => Number(v))
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (scriptFile: string, o) => {
+    await runIllustrationAgent({ scriptFile, out: o.out, motionFile: o.motion, textFile: o.text, style: o.style, notes: o.notes, generate: Boolean(o.generate), nonCommercial: Boolean(o.nonCommercial), vram: o.vram });
+  });
+
+agent
+  .command("presenter")
+  .description("Presenter Agent (LongCat-Video-Avatar-1.5): shot plan per beat from the presenter profile, then lip-synced presenter video from the FINAL narration")
+  .argument("<script.json>")
+  .requiredOption("--audio <dir>", "Audio Agent output folder (timeline.json + narration.wav)")
+  .option("--profile <id>", "presenter profile id", "default")
+  .option("--mode <mode>", "mode preset", "PODCAST_SHORT")
+  .option("--background <mode>", "keyable|styled|auto", "auto")
+  .option("--fullframe <ids...>", "beat ids whose visuals want the full frame")
+  .option("--no-generate", "plan only")
+  .option("--notes <text>", "extra direction")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (scriptFile: string, o) => {
+    await runPresenterAgent({ scriptFile, audioDir: o.audio, out: o.out, profile: o.profile, mode: o.mode, background: o.background, fullframe: o.fullframe, noGenerate: o.generate === false, notes: o.notes });
   });
 
 program.command("modes").description("List composition modes").action(() => {
