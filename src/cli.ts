@@ -14,6 +14,7 @@ import { commandExists } from "./media/ffmpeg.js";
 import { ShortMode, type ProjectState } from "./core/project.js";
 import { intakeAgent } from "./agents/legacy/intake.js";
 import { runScriptAgent } from "./agents/script/run.js";
+import { runTextAgent } from "./agents/text/run.js";
 
 loadDotEnv();
 
@@ -111,6 +112,19 @@ agent
   .option("--out <dir>", "output folder", "./output/agents")
   .action(async (topic: string, o) => {
     await runScriptAgent({ topic, platform: o.platform, duration_sec: o.duration, audience: o.audience, category: o.category, brand: o.brand, tone: o.tone, notes: o.notes, researchFile: o.research, previousFiles: o.previous, web_research: o.web !== false, out: o.out });
+  });
+
+agent
+  .command("text")
+  .description("Text Agent: script.json → on-screen text plan, writes <out>/text/text.json")
+  .argument("<script.json>")
+  .option("--platform <p>", "youtube_shorts|tiktok|instagram_reels|youtube|x", "youtube_shorts")
+  .option("--brand <text>", "brand / visual personality")
+  .option("--tone <text>", "tone")
+  .option("--notes <text>", "extra constraints")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (scriptFile: string, o) => {
+    await runTextAgent({ scriptFile, out: o.out, platform: o.platform, brand: o.brand, tone: o.tone, notes: o.notes });
   });
 
 program.command("modes").description("List composition modes").action(() => {
