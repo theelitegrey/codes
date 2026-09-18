@@ -1,0 +1,15 @@
+{
+  "id": "default_male",
+  "label": "Default Male",
+  "aliases": ["default male voice", "male voice", "the male voice"],
+  "provider": "voicestudio",
+  "voice_id": "default",
+  "model": "tts-1",
+  "style": "warm, steady male narration",
+  "speaking_speed": 1.0,
+  "pitch_semitones": 0,
+  "emotion": "confident and grounded",
+  "language": "en",
+  "output_format": "wav",
+  "gain_db": 0
+}

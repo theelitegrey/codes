@@ -1,0 +1,73 @@
+{
+  "default": "default_host",
+  "presenters": {
+    "default_host": {
+      "id": "default_host",
+      "label": "Default Host",
+      "aliases": ["default presenter", "my presenter", "the host"],
+      "character_identity": "A confident, approachable male podcast host in his early thirties",
+      "appearance": "Medium build, light stubble, warm brown eyes, natural skin tone",
+      "clothing": "a plain dark charcoal crew-neck t-shirt under an open black overshirt",
+      "hairstyle": "short textured dark brown hair, neatly styled",
+      "age_range": "30-35",
+      "general_expression": "Engaged and friendly, with occasional smiles and raised eyebrows when emphasising a point",
+      "camera_framing": "Medium shot, chest-up, centred in frame with headroom",
+      "lighting": "Soft key light from the front-left with a subtle rim light, professional podcast lighting",
+      "background_style": "Clean modern studio with a dark, slightly out-of-focus background and a faint accent light",
+      "presenter_prompt": "Speaking to the camera as a podcast host explaining an idea clearly and energetically",
+      "reference_images": ["reference.png"],
+      "default_voice_id": "default"
+    },
+    "trading_host": {
+      "id": "trading_host",
+      "label": "Trading Host",
+      "aliases": ["trading presenter", "the trader"],
+      "character_identity": "A sharp, analytical male trading commentator in his mid thirties",
+      "appearance": "Lean build, clean shaven, focused grey-blue eyes",
+      "clothing": "a fitted navy quarter-zip pullover",
+      "hairstyle": "short dark hair swept back",
+      "age_range": "33-38",
+      "general_expression": "Calm and precise, confident, occasional knowing half-smile",
+      "camera_framing": "Medium shot, chest-up, slightly off-centre to the left",
+      "lighting": "Cool key light with monitor glow as fill",
+      "background_style": "Dimly lit trading desk with softly glowing charts on out-of-focus monitors",
+      "presenter_prompt": "Explaining a market concept to the camera like an experienced trader breaking down a chart",
+      "reference_images": ["reference.png"],
+      "default_voice_id": "default_male"
+    },
+    "news_host": {
+      "id": "news_host",
+      "label": "News Host",
+      "aliases": ["news presenter", "news anchor", "the anchor"],
+      "character_identity": "A polished, credible male news anchor in his late thirties",
+      "appearance": "Broad shoulders, clean shaven, attentive dark eyes",
+      "clothing": "a dark blue blazer over a white shirt, no tie",
+      "hairstyle": "neatly parted short black hair",
+      "age_range": "36-42",
+      "general_expression": "Composed and authoritative with measured emphasis",
+      "camera_framing": "Medium shot, chest-up, centred, anchor-desk framing",
+      "lighting": "Even broadcast lighting, minimal shadows",
+      "background_style": "Modern newsroom backdrop with blurred screens and a red-and-blue accent",
+      "presenter_prompt": "Delivering a news update straight to camera with clear diction",
+      "reference_images": ["reference.png"],
+      "default_voice_id": "default_male"
+    },
+    "educational_host": {
+      "id": "educational_host",
+      "label": "Educational Host",
+      "aliases": ["educational presenter", "the teacher", "teacher host"],
+      "character_identity": "A warm, patient male educator in his early forties",
+      "appearance": "Average build, short beard, kind hazel eyes, glasses",
+      "clothing": "a soft olive henley shirt",
+      "hairstyle": "short salt-and-pepper hair",
+      "age_range": "40-45",
+      "general_expression": "Encouraging and clear, nods when making a point, frequent gentle smiles",
+      "camera_framing": "Medium shot, chest-up, centred with generous headroom",
+      "lighting": "Warm natural-looking key light, soft fill",
+      "background_style": "Bright minimal room with a light wall and a plant slightly out of focus",
+      "presenter_prompt": "Teaching a concept step by step to the camera like a friendly instructor",
+      "reference_images": ["reference.png"],
+      "default_voice_id": "energetic_male"
+    }
+  }
+}

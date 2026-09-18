@@ -1,0 +1,15 @@
+{
+  "id": "energetic_male",
+  "label": "Energetic Male",
+  "aliases": ["energetic male voice", "energetic voice", "hype voice"],
+  "provider": "voicestudio",
+  "voice_id": "default",
+  "model": "tts-1",
+  "style": "fast, upbeat, punchy delivery for hooks",
+  "speaking_speed": 1.12,
+  "pitch_semitones": 0,
+  "emotion": "excited and energetic",
+  "language": "en",
+  "output_format": "wav",
+  "gain_db": 1
+}

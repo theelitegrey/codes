@@ -1,0 +1,36 @@
+{
+  "name": "shorts-director",
+  "version": "0.1.0",
+  "description": "Podcast-style YouTube Shorts generator: research → script → VoiceStudio narration → LongCat-Video-Avatar presenter → Remotion/FFmpeg composition.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "bin": { "shorts": "./bin/shorts.js" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "shorts": "tsx src/cli.ts",
+    "remotion:studio": "remotion studio remotion/index.ts",
+    "doctor": "tsx src/cli.ts doctor",
+    "e2e:fixture": "tsx scripts/e2e-fixture.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "@remotion/bundler": "^4.0.526",
+    "@remotion/cli": "^4.0.526",
+    "@remotion/renderer": "^4.0.526",
+    "commander": "^15.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "remotion": "^4.0.526",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.20.0",
+    "vitest": "^3.2.0"
+  }
+}

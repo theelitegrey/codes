@@ -1,0 +1,15 @@
+{
+  "id": "local_dev",
+  "label": "Local Dev TTS",
+  "aliases": ["local voice", "dev voice", "offline voice"],
+  "provider": "local",
+  "voice_id": "en",
+  "model": "espeak-ng",
+  "style": "robotic placeholder for pipeline testing without VoiceStudio",
+  "speaking_speed": 1.0,
+  "pitch_semitones": 0,
+  "emotion": "",
+  "language": "en",
+  "output_format": "wav",
+  "gain_db": 0
+}

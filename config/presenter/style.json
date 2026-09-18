@@ -1,0 +1,8 @@
+{
+  "prompt_template": "{identity}. {appearance}, {age}, {hairstyle}, wearing {clothing}. {expression}. {framing}, looking toward the camera and speaking naturally with subtle natural head movement and hand gestures. {lighting}. {background}. {prompt}. {mode_hints}. Static camera, high detail, realistic skin, sharp focus on the face, no subtitles, no text.",
+  "negative_prompt": "close-up, subtitles, text, watermark, blurry, deformed hands, extra fingers, overexposed, messy background, multiple people, walking",
+  "default_height_fraction": 0.45,
+  "resolution": "480p",
+  "crop": "face_weighted",
+  "blend": { "feather_px": 48, "vignette": true, "color_grade": true }
+}
