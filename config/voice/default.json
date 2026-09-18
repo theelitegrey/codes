@@ -1,7 +1,11 @@
 {
   "id": "default",
   "label": "Default Narrator",
-  "aliases": ["default narrator", "default voice", "narrator"],
+  "aliases": [
+    "default narrator",
+    "default voice",
+    "narrator"
+  ],
   "provider": "voicestudio",
   "voice_id": "default",
   "model": "tts-1",
@@ -11,5 +15,13 @@
   "emotion": "calm and confident",
   "language": "en",
   "output_format": "wav",
-  "gain_db": 0
+  "gain_db": 0,
+  "traits": {
+    "gender": "male",
+    "age": "30s",
+    "accent": "neutral American",
+    "energy": 3,
+    "authority": 3,
+    "best_for": "both"
+  }
 }

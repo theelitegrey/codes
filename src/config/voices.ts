@@ -33,6 +33,19 @@ export const VoiceConfig = z.object({
   output_format: z.enum(["wav", "mp3", "flac", "opus", "aac", "pcm"]).default("wav"),
   /** Gain adjustment applied in post (dB). */
   gain_db: z.number().default(0),
+  /** Descriptive traits the Audio Agent uses to choose a voice. */
+  traits: z
+    .object({
+      gender: z.string().default("unspecified"),
+      age: z.string().default("unspecified"),
+      accent: z.string().default("unspecified"),
+      /** 1 = calm … 5 = hype */
+      energy: z.number().min(1).max(5).default(3),
+      /** 1 = casual … 5 = authoritative */
+      authority: z.number().min(1).max(5).default(3),
+      best_for: z.enum(["educational", "entertainment", "both"]).default("both"),
+    })
+    .default({ gender: "unspecified", age: "unspecified", accent: "unspecified", energy: 3, authority: 3, best_for: "both" }),
 });
 export type VoiceConfig = z.infer<typeof VoiceConfig>;
 

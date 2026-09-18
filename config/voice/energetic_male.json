@@ -1,7 +1,11 @@
 {
   "id": "energetic_male",
   "label": "Energetic Male",
-  "aliases": ["energetic male voice", "energetic voice", "hype voice"],
+  "aliases": [
+    "energetic male voice",
+    "energetic voice",
+    "hype voice"
+  ],
   "provider": "voicestudio",
   "voice_id": "default",
   "model": "tts-1",
@@ -11,5 +15,13 @@
   "emotion": "excited and energetic",
   "language": "en",
   "output_format": "wav",
-  "gain_db": 1
+  "gain_db": 1,
+  "traits": {
+    "gender": "male",
+    "age": "20s-30s",
+    "accent": "neutral American",
+    "energy": 5,
+    "authority": 2,
+    "best_for": "entertainment"
+  }
 }

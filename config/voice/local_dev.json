@@ -1,7 +1,11 @@
 {
   "id": "local_dev",
   "label": "Local Dev TTS",
-  "aliases": ["local voice", "dev voice", "offline voice"],
+  "aliases": [
+    "local voice",
+    "dev voice",
+    "offline voice"
+  ],
   "provider": "local",
   "voice_id": "en",
   "model": "espeak-ng",
@@ -11,5 +15,13 @@
   "emotion": "",
   "language": "en",
   "output_format": "wav",
-  "gain_db": 0
+  "gain_db": 0,
+  "traits": {
+    "gender": "unspecified",
+    "age": "unspecified",
+    "accent": "synthetic",
+    "energy": 2,
+    "authority": 1,
+    "best_for": "both"
+  }
 }

@@ -15,6 +15,7 @@ import { ShortMode, type ProjectState } from "./core/project.js";
 import { intakeAgent } from "./agents/legacy/intake.js";
 import { runScriptAgent } from "./agents/script/run.js";
 import { runTextAgent } from "./agents/text/run.js";
+import { runAudioAgent } from "./agents/audio/run.js";
 
 loadDotEnv();
 
@@ -125,6 +126,25 @@ agent
   .option("--out <dir>", "output folder", "./output/agents")
   .action(async (scriptFile: string, o) => {
     await runTextAgent({ scriptFile, out: o.out, platform: o.platform, brand: o.brand, tone: o.tone, notes: o.notes });
+  });
+
+agent
+  .command("audio")
+  .description("Audio Agent: script.json → VoiceStudio narration with pauses, music bed, SFX, mastered mix + loudness report in <out>/audio/")
+  .argument("<script.json>")
+  .option("--platform <p>", "youtube_shorts|tiktok|instagram_reels|youtube|x", "youtube_shorts")
+  .option("--audience <text>", "target audience")
+  .option("--brand <text>", "brand / personality")
+  .option("--tone <text>", "tone")
+  .option("--category <c>", "educational|entertainment|news|trading|story|other", "educational")
+  .option("--voice <id>", "force a configured voice id instead of letting the agent choose")
+  .option("--music <file>", "explicit music bed file")
+  .option("--no-music", "disable music")
+  .option("--no-sfx", "disable sound effects")
+  .option("--notes <text>", "extra constraints")
+  .option("--out <dir>", "output folder", "./output/agents")
+  .action(async (scriptFile: string, o) => {
+    await runAudioAgent({ scriptFile, out: o.out, platform: o.platform, audience: o.audience, brand: o.brand, tone: o.tone, category: o.category, voice: o.voice, music: o.music, noMusic: o.music === false, noSfx: o.sfx === false, notes: o.notes });
   });
 
 program.command("modes").description("List composition modes").action(() => {
