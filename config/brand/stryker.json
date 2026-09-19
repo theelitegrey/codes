@@ -1,0 +1,22 @@
+{
+  "$comment": "Stryker Trading Academy brand tokens. Replace the palette, wordmark and URL with the real brand system; everything in the promo composition reads from here.",
+  "name": "STRYKER",
+  "sub": "TRADING ACADEMY",
+  "url": "strykertradingacademy.com",
+  "tagline": "Learn. Practice. Execute.",
+  "colors": {
+    "bg": "#06080C",
+    "bgElevated": "#0D1219",
+    "panel": "#121926",
+    "line": "#1E2A3C",
+    "fg": "#FFFFFF",
+    "muted": "#8A97AC",
+    "accent": "#00D8FF",
+    "accent2": "#7C5CFF",
+    "up": "#12E29A",
+    "down": "#FF3B4E",
+    "warn": "#FFC53D"
+  },
+  "font": "Inter, 'Helvetica Neue', Arial, sans-serif",
+  "mono": "'JetBrains Mono', Menlo, monospace"
+}

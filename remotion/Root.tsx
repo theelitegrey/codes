@@ -8,6 +8,8 @@ import { MotionPreview } from "./motion/MotionStage.js";
 import { MotionPreviewProps } from "./motion/schema.js";
 import { ComposedShort } from "./composition/ComposedShort.js";
 import { MasterTimeline } from "./composition/schema.js";
+import { StrykerPromo } from "./promo/StrykerPromo.js";
+import { StrykerPromoProps } from "./promo/brand.js";
 
 const demoPreset = BUILTIN_PRESETS.PODCAST_SHORT;
 
@@ -41,8 +43,32 @@ const demoTimeline: z.infer<typeof ComposedProps> = {
   timeline: { width: 1080, height: 1920, fps: 30, duration: 3, audio_src: "", theme: demoMotion.plan.theme, scenes: [{ scene: 1, beat_id: "demo", start: 0, end: 3, duration: 3, transition_in: "cut", reserved: [], caption_rect: null, layers: [{ id: "bg", type: "background", z: 0, start: 0, end: 3, rect: { x: 0, y: 0, w: 1080, h: 1920 }, style: "clean_dark", accent: "#4F8CFF", motion: "subtle" }] }], events: [] },
 };
 
+const strykerDemo: StrykerPromoProps = {
+  brand: { name: "STRYKER", sub: "TRADING ACADEMY", url: "strykertradingacademy.com", tagline: "Learn. Practice. Execute.", colors: { bg: "#06080C", bgElevated: "#0D1219", panel: "#121926", line: "#1E2A3C", fg: "#FFFFFF", muted: "#8A97AC", accent: "#00D8FF", accent2: "#7C5CFF", up: "#12E29A", down: "#FF3B4E", warn: "#FFC53D" }, font: "Inter, Arial, sans-serif", mono: "JetBrains Mono, Menlo, monospace" },
+  words: [{ word: "Stryker", start: 0, end: 0.5 }],
+  beats: [{ id: "b1", kind: "hook", start: 0, end: 4, label: "Hook" }],
+  duration: 4,
+  emphasis: ["PASSED"],
+  presenterFraction: 0.46,
+  presenterSrc: null,
+};
+
 export const Root: React.FC = () => (
   <>
+  <Composition
+    id="StrykerPromo"
+    component={StrykerPromo}
+    schema={StrykerPromoProps}
+    defaultProps={strykerDemo}
+    width={1080}
+    height={1920}
+    fps={30}
+    durationInFrames={120}
+    calculateMetadata={({ props }) => {
+      const p = props as StrykerPromoProps;
+      return { durationInFrames: Math.max(1, Math.ceil(p.duration * 30)) };
+    }}
+  />
   <Composition
     id="ComposedShort"
     component={ComposedShort}
