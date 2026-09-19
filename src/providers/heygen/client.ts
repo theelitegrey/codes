@@ -4,35 +4,73 @@ import { env, envBool, envInt } from "../../core/env.js";
 import { log } from "../../core/log.js";
 
 /**
- * Minimal HeyGen REST client covering exactly the documented endpoints this
- * pipeline needs (see docs/integrations/heygen.md for the validation notes):
+ * HeyGen v3 REST client.
  *
- *   POST https://api.heygen.com/v3/voices/speech        text → WAV url (+ duration, word timestamps)
- *   GET  https://api.heygen.com/v2/voices                voice catalogue
- *   GET  https://api.heygen.com/v2/avatars               avatars + talking photos
- *   POST https://upload.heygen.com/v1/asset              raw file body → asset id / url
- *   POST https://upload.heygen.com/v1/talking_photo      raw image body → talking_photo_id
- *   POST https://api.heygen.com/v2/video/generate        avatar video (voice.type "audio" for lip-sync)
- *   GET  https://api.heygen.com/v1/video_status.get      poll → video_url
+ * Shapes here were taken from HeyGen's own MCP tool schemas (the official
+ * HeyGen connector), which are the authoritative description of the v3 API:
  *
- * Auth: `X-Api-Key` header on every request.
+ *   GET  /v3/voices?engine=starfish&type=public&language=&gender=&limit=&token=
+ *          → {items:[{voice_id,name,language,gender,preview_audio_url,
+ *                     support_pause,support_locale,type}], has_more, next_token}
+ *   POST /v3/voices/speech   {text, voice_id, input_type, language?, locale?, speed}
+ *          → {audio_url, duration, word_timestamps:[{word,start,end}]}
+ *   GET  /v3/avatars/looks?ownership=&avatar_type=&group_id=&limit=&token=
+ *          → {items:[{id, name, avatar_type, group_id, preview_image_url, gender,
+ *                     default_voice_id, supported_api_engines[], image_width,
+ *                     image_height, preferred_orientation, status}]}
+ *   POST /v3/videos          avatar or image source + script|audio, engine,
+ *                            aspect_ratio, output_format, resolution, background…
+ *          → {video_id, status, output_format}
+ *   GET  /v3/videos/{id}     → status, video_url, duration…
+ *   POST /v3/assets          raw upload → {asset_id|id, url}
+ *
+ * HeyGen's published skills state that v1/v2 endpoints are deprecated
+ * ("v3 only — never call v1 or v2 endpoints"), so nothing here uses them.
+ * Auth is the `X-Api-Key` header. Paths are overridable by env because this
+ * build cannot reach developers.heygen.com to re-verify them.
  */
 export interface HeyGenClientOptions {
   apiKey?: string;
   apiBase?: string;
-  uploadBase?: string;
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
 }
+
+export const PATHS = {
+  voices: env("HEYGEN_PATH_VOICES", "/v3/voices")!,
+  speech: env("HEYGEN_PATH_SPEECH", "/v3/voices/speech")!,
+  looks: env("HEYGEN_PATH_LOOKS", "/v3/avatars/looks")!,
+  groups: env("HEYGEN_PATH_GROUPS", "/v3/avatars/groups")!,
+  videos: env("HEYGEN_PATH_VIDEOS", "/v3/videos")!,
+  assets: env("HEYGEN_PATH_ASSETS", "/v3/assets")!,
+  me: env("HEYGEN_PATH_ME", "/v3/user/me")!,
+} as const;
+
+export type AvatarEngine = "avatar_iii" | "avatar_iv" | "avatar_v";
 
 export interface HeyGenVoice {
   voice_id: string;
   name: string;
   language?: string;
   gender?: string;
-  preview_audio?: string;
   support_pause?: boolean;
-  emotion_support?: boolean;
+  type?: string;
+  raw: unknown;
+}
+
+export interface HeyGenLook {
+  id: string;
+  name: string;
+  avatar_type: string;
+  group_id?: string;
+  gender?: string;
+  default_voice_id?: string;
+  supported_api_engines: AvatarEngine[];
+  image_width?: number;
+  image_height?: number;
+  preferred_orientation?: string;
+  status?: string;
+  preview_image_url?: string;
   raw: unknown;
 }
 
@@ -51,15 +89,26 @@ export interface HeyGenVideoStatus {
   raw: unknown;
 }
 
+/** HeyGen wraps some payloads in `data`; v3 mostly returns them flat. */
 const unwrap = <T>(j: unknown): T => {
-  const o = j as { data?: T; error?: unknown };
-  if (o && typeof o === "object" && "data" in o && o.data !== undefined && o.data !== null) return o.data as T;
-  return j as T;
+  const o = j as { data?: T };
+  return o && typeof o === "object" && "data" in o && o.data != null ? (o.data as T) : (j as T);
 };
+
+/** `<start>` / `<end>` sentinels come back in word_timestamps; drop them. */
+export function cleanWordTimestamps(raw: unknown): Array<{ word: string; start: number; end: number }> | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out = raw
+    .map((w) => {
+      const o = w as Record<string, unknown>;
+      return { word: String(o.word ?? o.text ?? "").trim(), start: Number(o.start ?? o.start_time ?? 0), end: Number(o.end ?? o.end_time ?? 0) };
+    })
+    .filter((w) => w.word && w.word !== "<start>" && w.word !== "<end>");
+  return out.length ? out : undefined;
+}
 
 export class HeyGenClient {
   readonly apiBase: string;
-  readonly uploadBase: string;
   private readonly apiKey?: string;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
@@ -67,7 +116,6 @@ export class HeyGenClient {
   constructor(o: HeyGenClientOptions = {}) {
     this.apiKey = o.apiKey ?? env("HEYGEN_API_KEY");
     this.apiBase = (o.apiBase ?? env("HEYGEN_API_BASE", "https://api.heygen.com")!).replace(/\/+$/, "");
-    this.uploadBase = (o.uploadBase ?? env("HEYGEN_UPLOAD_BASE", "https://upload.heygen.com")!).replace(/\/+$/, "");
     this.fetchImpl = o.fetchImpl ?? fetch;
     this.timeoutMs = o.timeoutMs ?? envInt("HEYGEN_TIMEOUT_MS", 120_000);
   }
@@ -76,8 +124,9 @@ export class HeyGenClient {
     return Boolean(this.apiKey);
   }
 
-  private async req(url: string, init: RequestInit & { rawBody?: Buffer; contentType?: string } = {}): Promise<unknown> {
+  private async req(pathOrUrl: string, init: RequestInit & { rawBody?: Buffer; contentType?: string } = {}): Promise<unknown> {
     if (!this.apiKey) throw new Error("HEYGEN_API_KEY is not set");
+    const url = pathOrUrl.startsWith("http") ? pathOrUrl : `${this.apiBase}${pathOrUrl}`;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), this.timeoutMs);
     try {
@@ -86,7 +135,7 @@ export class HeyGenClient {
       if (init.rawBody) {
         headers["Content-Type"] = init.contentType ?? "application/octet-stream";
         body = new Uint8Array(init.rawBody);
-      } else if (init.body && typeof init.body === "string") headers["Content-Type"] = "application/json";
+      } else if (typeof init.body === "string") headers["Content-Type"] = "application/json";
       const r = await this.fetchImpl(url, { method: init.method ?? "GET", headers, body, signal: ctrl.signal });
       const text = await r.text();
       let json: unknown;
@@ -95,9 +144,11 @@ export class HeyGenClient {
       } catch {
         json = { raw: text };
       }
-      if (!r.ok) throw new Error(`HeyGen ${init.method ?? "GET"} ${url} → HTTP ${r.status}: ${text.slice(0, 400)}`);
-      const err = (json as { error?: unknown }).error;
-      if (err) throw new Error(`HeyGen ${url} returned error: ${JSON.stringify(err).slice(0, 400)}`);
+      const err = (json as { error?: unknown; message?: string; error_code?: string }).error;
+      if (!r.ok || err) {
+        const detail = (json as { message?: string }).message ?? (typeof err === "string" ? err : JSON.stringify(err ?? text).slice(0, 400));
+        throw new Error(`HeyGen ${init.method ?? "GET"} ${url} → HTTP ${r.status}: ${detail}`);
+      }
       return json;
     } finally {
       clearTimeout(timer);
@@ -105,86 +156,127 @@ export class HeyGenClient {
   }
 
   // ---- voices ----------------------------------------------------------------
-  async listVoices(): Promise<HeyGenVoice[]> {
-    const d = unwrap<{ voices?: unknown[] } | unknown[]>(await this.req(`${this.apiBase}/v2/voices`));
-    const arr = Array.isArray(d) ? d : (d.voices ?? []);
-    return arr.map((v) => {
-      const o = v as Record<string, unknown>;
-      return { voice_id: String(o.voice_id ?? o.id ?? ""), name: String(o.name ?? o.display_name ?? ""), language: o.language ? String(o.language) : undefined, gender: o.gender ? String(o.gender) : undefined, preview_audio: o.preview_audio ? String(o.preview_audio) : undefined, support_pause: Boolean(o.support_pause), emotion_support: Boolean(o.emotion_support), raw: v };
-    }).filter((v) => v.voice_id);
+  /** Only starfish-engine voices can drive /v3/voices/speech. */
+  async listVoices(o: { engine?: string; language?: string; gender?: string; type?: "public" | "private"; limit?: number } = {}): Promise<HeyGenVoice[]> {
+    const q = new URLSearchParams();
+    q.set("engine", o.engine ?? "starfish");
+    q.set("type", o.type ?? "public");
+    q.set("limit", String(o.limit ?? 50));
+    if (o.language) q.set("language", o.language);
+    if (o.gender) q.set("gender", o.gender);
+    const d = unwrap<{ items?: Array<Record<string, unknown>>; voices?: Array<Record<string, unknown>> }>(await this.req(`${PATHS.voices}?${q}`));
+    const items = d.items ?? d.voices ?? [];
+    return items.map((o2) => ({ voice_id: String(o2.voice_id ?? o2.id ?? ""), name: String(o2.name ?? ""), language: o2.language ? String(o2.language) : undefined, gender: o2.gender ? String(o2.gender) : undefined, support_pause: Boolean(o2.support_pause), type: o2.type ? String(o2.type) : undefined, raw: o2 })).filter((v) => v.voice_id);
   }
 
-  /** Build the /v3/voices/speech body. Exposed for tests. */
+  /** Build the /v3/voices/speech body. Break tags must use seconds ("0.35s"). */
   static speechBody(o: { text: string; voiceId: string; speed?: number; ssml?: boolean; language?: string; locale?: string }): Record<string, unknown> {
+    if (o.text.length > 5000) throw new Error(`HeyGen speech accepts at most 5000 characters (got ${o.text.length})`);
     const b: Record<string, unknown> = { text: o.text, voice_id: o.voiceId, input_type: o.ssml ? "ssml" : "text" };
     if (o.speed !== undefined) b.speed = Math.min(2, Math.max(0.5, o.speed));
-    if (o.language) b.language = o.language;
     if (o.locale) b.locale = o.locale;
+    else if (o.language) b.language = o.language;
     return b;
   }
 
   async speech(o: { text: string; voiceId: string; speed?: number; ssml?: boolean; language?: string; locale?: string }): Promise<HeyGenSpeechResult> {
-    const j = await this.req(`${this.apiBase}/v3/voices/speech`, { method: "POST", body: JSON.stringify(HeyGenClient.speechBody(o)) });
+    const j = await this.req(PATHS.speech, { method: "POST", body: JSON.stringify(HeyGenClient.speechBody(o)) });
     const d = unwrap<Record<string, unknown>>(j);
     const url = String(d.audio_url ?? d.url ?? "");
     if (!url) throw new Error(`HeyGen speech returned no audio_url: ${JSON.stringify(j).slice(0, 300)}`);
-    const wt = (d.word_timestamps ?? d.words) as Array<Record<string, unknown>> | undefined;
-    const words = Array.isArray(wt) ? wt.map((w) => ({ word: String(w.word ?? w.text ?? ""), start: Number(w.start ?? w.start_time ?? 0), end: Number(w.end ?? w.end_time ?? 0) })).filter((w) => w.word) : undefined;
-    return { audio_url: url, duration: d.duration !== undefined ? Number(d.duration) : undefined, words, raw: j };
+    return { audio_url: url, duration: d.duration !== undefined ? Number(d.duration) : undefined, words: cleanWordTimestamps(d.word_timestamps ?? d.words), raw: j };
   }
 
-  // ---- assets ----------------------------------------------------------------
-  async uploadAsset(file: string, contentType?: string): Promise<{ id: string; url?: string; raw: unknown }> {
-    const j = await this.req(`${this.uploadBase}/v1/asset`, { method: "POST", rawBody: fs.readFileSync(file), contentType: contentType ?? mimeFor(file) });
-    const d = unwrap<Record<string, unknown>>(j);
-    const id = String(d.id ?? d.asset_id ?? "");
-    if (!id) throw new Error(`HeyGen asset upload returned no id: ${JSON.stringify(j).slice(0, 300)}`);
-    return { id, url: d.url ? String(d.url) : undefined, raw: j };
+  // ---- avatars ---------------------------------------------------------------
+  async listLooks(o: { ownership?: "public" | "private"; avatarType?: "studio_avatar" | "digital_twin" | "photo_avatar"; groupId?: string; limit?: number } = {}): Promise<HeyGenLook[]> {
+    const q = new URLSearchParams();
+    q.set("limit", String(o.limit ?? 50));
+    if (o.ownership) q.set("ownership", o.ownership);
+    if (o.avatarType) q.set("avatar_type", o.avatarType);
+    if (o.groupId) q.set("group_id", o.groupId);
+    const d = unwrap<{ items?: Array<Record<string, unknown>> }>(await this.req(`${PATHS.looks}?${q}`));
+    return (d.items ?? []).map((o2) => ({
+      id: String(o2.id ?? o2.look_id ?? o2.avatar_id ?? ""),
+      name: String(o2.name ?? ""),
+      avatar_type: String(o2.avatar_type ?? ""),
+      group_id: o2.group_id ? String(o2.group_id) : undefined,
+      gender: o2.gender ? String(o2.gender) : undefined,
+      default_voice_id: o2.default_voice_id ? String(o2.default_voice_id) : undefined,
+      supported_api_engines: Array.isArray(o2.supported_api_engines) ? (o2.supported_api_engines as AvatarEngine[]) : [],
+      image_width: o2.image_width ? Number(o2.image_width) : undefined,
+      image_height: o2.image_height ? Number(o2.image_height) : undefined,
+      preferred_orientation: o2.preferred_orientation ? String(o2.preferred_orientation) : undefined,
+      status: o2.status ? String(o2.status) : undefined,
+      preview_image_url: o2.preview_image_url ? String(o2.preview_image_url) : undefined,
+      raw: o2,
+    })).filter((l) => l.id);
   }
 
-  async uploadTalkingPhoto(imageFile: string): Promise<{ talking_photo_id: string; raw: unknown }> {
-    const j = await this.req(`${this.uploadBase}/v1/talking_photo`, { method: "POST", rawBody: fs.readFileSync(imageFile), contentType: mimeFor(imageFile) });
-    const d = unwrap<Record<string, unknown>>(j);
-    const id = String(d.talking_photo_id ?? d.id ?? "");
-    if (!id) throw new Error(`HeyGen talking photo upload returned no talking_photo_id: ${JSON.stringify(j).slice(0, 300)}`);
-    return { talking_photo_id: id, raw: j };
-  }
-
-  async listAvatars(): Promise<{ avatars: Array<Record<string, unknown>>; talking_photos: Array<Record<string, unknown>> }> {
-    const d = unwrap<{ avatars?: Array<Record<string, unknown>>; talking_photos?: Array<Record<string, unknown>> }>(await this.req(`${this.apiBase}/v2/avatars`));
-    return { avatars: d.avatars ?? [], talking_photos: d.talking_photos ?? [] };
+  async getLook(lookId: string): Promise<HeyGenLook | undefined> {
+    const looks = await this.listLooks({ limit: 50 });
+    return looks.find((l) => l.id === lookId);
   }
 
   // ---- video -----------------------------------------------------------------
-  /** Build the /v2/video/generate body for an audio-driven avatar or talking photo. Exposed for tests. */
-  static videoBody(o: { character: { type: "avatar"; avatar_id: string; avatar_style?: string } | { type: "talking_photo"; talking_photo_id: string; talking_style?: string }; audioAssetId?: string; audioUrl?: string; backgroundColor: string; width: number; height: number; title?: string; test?: boolean; callbackId?: string }): Record<string, unknown> {
-    if (Boolean(o.audioAssetId) === Boolean(o.audioUrl)) throw new Error("exactly one of audioAssetId or audioUrl is required");
-    const voice: Record<string, unknown> = { type: "audio" };
-    if (o.audioAssetId) voice.audio_asset_id = o.audioAssetId;
-    if (o.audioUrl) voice.audio_url = o.audioUrl;
-    const character: Record<string, unknown> = o.character.type === "avatar" ? { type: "avatar", avatar_id: o.character.avatar_id, avatar_style: o.character.avatar_style ?? "normal" } : { type: "talking_photo", talking_photo_id: o.character.talking_photo_id, ...(o.character.talking_style ? { talking_style: o.character.talking_style } : {}) };
-    const body: Record<string, unknown> = {
-      video_inputs: [{ character, voice, background: { type: "color", value: o.backgroundColor } }],
-      dimension: { width: o.width, height: o.height },
-    };
+  /**
+   * Body for POST /v3/videos. `engine.type` must be one of the look's
+   * `supported_api_engines` — a studio avatar that only lists `avatar_iii`
+   * rejects the default Avatar IV with "does not support Avatar IV video
+   * generation". `output_format: "webm"` yields a transparent alpha channel
+   * (requires a matting-capable avatar) and forbids `background`.
+   */
+  static videoBody(o: {
+    source: { type: "avatar"; avatar_id: string } | { type: "image"; url?: string; asset_id?: string };
+    audioUrl?: string;
+    audioAssetId?: string;
+    script?: string;
+    voiceId?: string;
+    engine?: AvatarEngine;
+    aspectRatio?: "auto" | "16:9" | "9:16" | "1:1" | "4:5" | "5:4";
+    outputFormat?: "mp4" | "webm";
+    resolution?: "4k" | "1080p" | "720p";
+    backgroundColor?: string;
+    fit?: "contain" | "cover";
+    title?: string;
+    callbackUrl?: string;
+    callbackId?: string;
+  }): Record<string, unknown> {
+    const audioSources = [o.audioUrl, o.audioAssetId, o.script].filter(Boolean).length;
+    if (audioSources !== 1) throw new Error("exactly one of audioUrl, audioAssetId or script is required");
+    if (o.script && !o.voiceId && o.source.type === "image") throw new Error("voice_id is required with a script when animating an image");
+    if (o.outputFormat === "webm" && o.backgroundColor) throw new Error("webm output removes the background; a background colour is rejected");
+    const body: Record<string, unknown> = {};
+    if (o.source.type === "avatar") body.avatar_id = o.source.avatar_id;
+    else body.image = o.source.asset_id ? { type: "asset_id", asset_id: o.source.asset_id } : { type: "url", url: o.source.url };
+    if (o.audioUrl) body.audio_url = o.audioUrl;
+    if (o.audioAssetId) body.audio_asset_id = o.audioAssetId;
+    if (o.script) {
+      body.script = o.script;
+      if (o.voiceId) body.voice_id = o.voiceId;
+    }
+    if (o.engine) body.engine = { type: o.engine };
+    body.aspect_ratio = o.aspectRatio ?? "auto";
+    body.output_format = o.outputFormat ?? "mp4";
+    if (o.resolution) body.resolution = o.resolution;
+    if (o.backgroundColor) body.background = { type: "color", value: o.backgroundColor };
+    if (o.fit) body.fit = o.fit;
     if (o.title) body.title = o.title;
-    if (o.test) body.test = true;
+    if (o.callbackUrl) body.callback_url = o.callbackUrl;
     if (o.callbackId) body.callback_id = o.callbackId;
     return body;
   }
 
-  async generateVideo(body: Record<string, unknown>): Promise<{ video_id: string; raw: unknown }> {
-    const j = await this.req(`${this.apiBase}/v2/video/generate`, { method: "POST", body: JSON.stringify(body) });
+  async createVideo(body: Record<string, unknown>): Promise<{ video_id: string; status?: string; output_format?: string; raw: unknown }> {
+    const j = await this.req(PATHS.videos, { method: "POST", body: JSON.stringify(body) });
     const d = unwrap<Record<string, unknown>>(j);
-    const id = String(d.video_id ?? "");
-    if (!id) throw new Error(`HeyGen video generate returned no video_id: ${JSON.stringify(j).slice(0, 300)}`);
-    return { video_id: id, raw: j };
+    const id = String(d.video_id ?? d.id ?? "");
+    if (!id) throw new Error(`HeyGen video create returned no video_id: ${JSON.stringify(j).slice(0, 300)}`);
+    return { video_id: id, status: d.status ? String(d.status) : undefined, output_format: d.output_format ? String(d.output_format) : undefined, raw: j };
   }
 
   async videoStatus(videoId: string): Promise<HeyGenVideoStatus> {
-    const j = await this.req(`${this.apiBase}/v1/video_status.get?video_id=${encodeURIComponent(videoId)}`);
-    const d = unwrap<Record<string, unknown>>(j);
-    return { status: String(d.status ?? ""), video_url: d.video_url ? String(d.video_url) : undefined, duration: d.duration !== undefined ? Number(d.duration) : undefined, error: d.error, raw: j };
+    const d = unwrap<Record<string, unknown>>(await this.req(`${PATHS.videos}/${encodeURIComponent(videoId)}`));
+    return { status: String(d.status ?? ""), video_url: d.video_url ? String(d.video_url) : undefined, duration: d.duration !== undefined ? Number(d.duration) : undefined, error: d.error, raw: d };
   }
 
   async waitForVideo(videoId: string, o: { intervalMs?: number; timeoutMs?: number; onStatus?: (s: string) => void } = {}): Promise<HeyGenVideoStatus> {
@@ -204,7 +296,22 @@ export class HeyGenClient {
     throw new Error(`HeyGen video ${videoId} did not complete within the timeout`);
   }
 
-  /** Download a signed URL to disk (no API key needed for the CDN URL). */
+  // ---- assets ----------------------------------------------------------------
+  async uploadAsset(file: string, contentType?: string): Promise<{ id: string; url?: string; raw: unknown }> {
+    const size = fs.statSync(file).size;
+    if (size > 32 * 1024 * 1024) throw new Error(`${path.basename(file)} is ${(size / 1e6).toFixed(1)} MB; HeyGen assets are capped at 32 MB`);
+    const j = await this.req(PATHS.assets, { method: "POST", rawBody: fs.readFileSync(file), contentType: contentType ?? mimeFor(file) });
+    const d = unwrap<Record<string, unknown>>(j);
+    const id = String(d.asset_id ?? d.id ?? "");
+    if (!id) throw new Error(`HeyGen asset upload returned no id: ${JSON.stringify(j).slice(0, 300)}`);
+    return { id, url: d.url ? String(d.url) : undefined, raw: j };
+  }
+
+  async me(): Promise<Record<string, unknown>> {
+    return unwrap<Record<string, unknown>>(await this.req(PATHS.me));
+  }
+
+  /** Download a signed URL to disk. */
   async download(url: string, outFile: string): Promise<string> {
     const r = await this.fetchImpl(url);
     if (!r.ok) throw new Error(`download ${url} → HTTP ${r.status}`);

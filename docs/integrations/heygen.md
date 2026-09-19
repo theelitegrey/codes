@@ -1,57 +1,76 @@
 # HeyGen — integration validation (default voice + presenter provider)
 
-Validated on 2026-09-19. HeyGen's documentation hosts (docs.heygen.com,
-developers.heygen.com) are blocked from this build environment, so the
-surface below was assembled from HeyGen's published OpenAPI mirror
-(github.com/tryAGI/HeyGen `heygen.yaml`) and HeyGen's own documentation
-pages as indexed by search (Create Video v2, Upload Asset, Video Status,
-List Voices v2, Text to Speech `/v3/voices/speech`, Using Audio Files as
-Voice, Photo Avatar). **Confirm field names against
-developers.heygen.com before the first paid run**; every request body the
-providers send is written to disk (`presenter/heygen/request.json`) for that
-purpose, and `HEYGEN_TEST_MODE=true` produces free watermarked renders.
+Validated on 2026-09-19 **against the live API** through HeyGen's official
+MCP connector, and against HeyGen's published agent skills
+(github.com/heygen-com/skills, `heygen-video` v3.2.0).
 
-| Need | Endpoint | Used by |
+> **v1 and v2 are deprecated.** HeyGen's own skill says it in those words:
+> "v3 only — never call v1 or v2 endpoints", naming `POST /v1/video.generate`,
+> `POST /v2/video/generate`, `GET /v2/avatars` and `GET /v1/avatar.list` as
+> deprecated. This integration targets v3 only.
+
+## Surfaces
+
+| Surface | When to use | Auth |
 |---|---|---|
-| Auth | header `X-Api-Key: <key>` on every call | all |
-| Voice catalogue | `GET https://api.heygen.com/v2/voices` → `data.voices[]` `{voice_id, name, language, gender, preview_audio, support_pause, emotion_support}` | `shorts voices discover --provider heygen`, "default" voice resolution |
-| Text-to-speech | `POST https://api.heygen.com/v3/voices/speech` body `{text, voice_id, input_type: "text"\|"ssml", speed 0.5–2.0, language?, locale?}` → `{audio_url (mono PCM16 WAV 44.1 kHz), duration, word_timestamps[]}` | `HeyGenVoiceProvider` |
-| Upload audio / image | `POST https://upload.heygen.com/v1/asset` raw body with `Content-Type: audio/wav` etc. → `data.id`, `data.url` | narration upload |
-| Photo → talking photo | `POST https://upload.heygen.com/v1/talking_photo` raw image body → `data.talking_photo_id` | presenter identity from `config/presenter/reference.png` |
-| Avatars | `GET https://api.heygen.com/v2/avatars` → `data.avatars[]`, `data.talking_photos[]` | doctor |
-| Avatar video from audio | `POST https://api.heygen.com/v2/video/generate` body `{video_inputs:[{character:{type:"avatar",avatar_id,avatar_style}\|{type:"talking_photo",talking_photo_id}, voice:{type:"audio", audio_asset_id\|audio_url}, background:{type:"color",value:"#1DB954"}}], dimension:{width,height}, title?, test?}` → `data.video_id` | `HeyGenAvatarProvider` |
-| Status | `GET https://api.heygen.com/v1/video_status.get?video_id=` → `data.status` (`pending\|processing\|completed\|failed`), `data.video_url`, `data.duration` | polling every 10 s |
+| **v3 REST** (`HEYGEN_TRANSPORT=rest`, default) | the pipeline running headless | `X-Api-Key` |
+| **`heygen` CLI** (`HEYGEN_TRANSPORT=cli`) | hosts that have the CLI; HeyGen's recommended agent surface | `HEYGEN_API_KEY` or `heygen auth login` |
+| **MCP** `https://mcp.heygen.com/mcp/v1/` | interactive agents (this is how the shapes below were verified) | OAuth |
 
-Script and audio are mutually exclusive in `voice`; exactly one of
-`audio_url` / `audio_asset_id` must be given. HeyGen also has a newer v3
-video API (`/v3/videos`, `/v3/assets`, `/v3/avatars`) with Avatar IV/V
-engines and transparent WebM output; the providers use the v2 generate
-endpoint because its body is fully specified in the OpenAPI mirror. Moving
-to v3 is a change inside `HeyGenClient` only.
+Install the CLI with `curl -fsSL https://static.heygen.ai/cli/install.sh | bash`.
+Its contract: JSON on stdout, `{error:{code,message,hint}}` on stderr, exit
+codes 0 ok · 1 API · 2 usage · 3 auth · 4 timeout, `--wait` to block.
+
+## v3 endpoints this pipeline uses
+
+| Need | Call | Notes |
+|---|---|---|
+| Voice catalogue | `GET /v3/voices?engine=starfish&type=public&language=&gender=` | `{items:[{voice_id,name,language,gender,support_pause,…}], has_more, next_token}`. **Only starfish voices can drive TTS.** |
+| Text to speech | `POST /v3/voices/speech` `{text (≤5000), voice_id, input_type: text\|ssml, language?, locale?, speed 0.5–2.0}` | → `{audio_url (WAV), duration, word_timestamps:[{word,start,end}]}`. Timestamps include `<start>`/`<end>` sentinels — strip them. SSML break tags must be **seconds** (`<break time="0.35s"/>`); ms is rejected. |
+| Avatar looks | `GET /v3/avatars/looks?ownership=&avatar_type=&group_id=` | `id` is the `avatar_id` you pass to video creation. Carries `supported_api_engines`, `image_width/height`, `preferred_orientation`, `status`, `default_voice_id`. Look ids are ephemeral — resolve from `group_id` at runtime. |
+| Presenter video | `POST /v3/videos` `{avatar_id \| image:{type:url\|asset_id}, audio_url \| audio_asset_id \| script+voice_id, engine:{type}, aspect_ratio, output_format, resolution, background, fit, caption}` | → `{video_id, status, output_format}` |
+| Status | `GET /v3/videos/{id}` | → `status`, `video_url`, `duration`, `thumbnail_url`, `gif_url`, `subtitle_url`, `video_page_url` |
+| Assets | `POST /v3/assets` (raw body, ≤32 MB) | → `asset_id` |
+
+### Two things that will bite you
+
+1. **`engine.type` must be in the look's `supported_api_engines`.** Public
+   studio avatars such as `Bryce_public_5` list only `avatar_iii`, and the
+   default Avatar IV is rejected with *"This video avatar does not support
+   Avatar IV video generation."* The provider reads the look and picks the
+   best supported engine (`avatar_v` > `avatar_iv` > `avatar_iii`).
+2. **`output_format: "webm"` returns a real alpha channel** and rejects any
+   `background`. This is strictly better than a green screen: the Composer
+   skips chroma keying entirely. Not every avatar supports matting, so the
+   provider tries webm first and falls back to mp4 on a flat key colour.
+
+## Verified end to end
+
+- `POST /v3/voices/speech` with `0be4826fa6fa4a0ca4f410c9d6f6e589`
+  ("Nikhil - Conversational & Easygoing") returned a 10.40 s WAV plus
+  word timestamps for every word.
+- `POST /v3/videos` with `avatar_id: Bryce_public_5`, that audio as
+  `audio_url`, `engine: {type: "avatar_iii"}`, `aspect_ratio: "1:1"`,
+  `output_format: "webm"`, `resolution: "720p"` produced a completed
+  **10.3967 s transparent webm** — duration matched the narration exactly.
 
 ## How the pipeline uses it
 
-Audio Agent → `HeyGenVoiceProvider.synthesize()` per spoken line
-(pauses are inserted as silence between lines by the Audio Agent, so no
-SSML is needed; `<break>` is passed through when a line contains it and the
-voice's `support_pause` is true). Word timestamps from HeyGen are stored on
-the audio timeline, and the Captions Agent uses them directly instead of
+Audio Agent → `HeyGenVoiceProvider` per spoken line (pauses are real silence
+between lines, so SSML is rarely needed). HeyGen's word timestamps are stored
+on the audio timeline, and the Captions Agent uses them directly instead of
 transcribing.
 
-Presenter Agent → `HeyGenAvatarProvider.generate()` with the FINAL
-`narration.wav`: upload → generate with `voice.type: "audio"` → poll →
-download. Identity is the profile's `heygen.avatar_id` (studio avatar or
-digital twin) or `heygen.talking_photo_id`; if neither is set, the
-reference image is uploaded once and the id cached in
-`config/presenter/heygen_cache.json`. The scene prompt is not sent
-(HeyGen has no prompt-driven scene control); the background is a flat
-colour the Composer keys out.
+Presenter Agent → `HeyGenAvatarProvider` with the FINAL `narration.wav`:
+upload as an asset → create the video with `audio_asset_id` → poll →
+download. Identity comes from the presenter profile's `heygen.look_id` or
+`heygen.group_id`; with neither, the profile's reference image is uploaded
+once (cached by content hash) and animated as a photo presenter.
 
 ## Limitations
 
-- Paid, hosted service; no per-second lip-sync control beyond the audio.
-- Prompted camera/lighting/background from the Presenter Agent do not
-  apply; choose them through the HeyGen avatar itself.
-- Talking-photo output is a portrait render of the photo; a studio avatar
-  or digital twin gives full-body gestures.
-- Rate limits and quotas per plan (`GET /v2/user/remaining_quota`).
+- Paid, hosted. Creator plan credits are consumed per render.
+- The Presenter Agent's prompted camera, lighting and background do not
+  apply; those come from the chosen HeyGen avatar.
+- `motion_prompt` and `expressiveness` are photo-avatar / Avatar V only.
+- Look ids change; store `group_id` for stability.

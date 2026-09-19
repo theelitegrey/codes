@@ -90,10 +90,15 @@ export class PresenterAgent {
       backgroundColor: plan.shot.background_mode === "keyable" ? KEY_COLOR.hex.replace("0x", "#") : undefined,
     };
     const r = await this.avatar.generate(genReq);
-    const raw_ = path.join(outDir, "presenter.mp4");
+    const raw_ = path.join(outDir, `presenter${path.extname(r.path) || ".mp4"}`);
     if (path.resolve(r.path) !== path.resolve(raw_)) fs.copyFileSync(r.path, raw_);
     let keyed: string | null = null;
-    if (plan.shot.background_mode === "keyable") {
+    const providerAlpha = Boolean((r.meta as { alpha?: boolean } | undefined)?.alpha);
+    if (providerAlpha) {
+      // The provider delivered a real alpha channel (e.g. HeyGen webm); no keying needed.
+      keyed = raw_;
+      log.info("presenter arrived with an alpha channel; skipping chroma key");
+    } else if (plan.shot.background_mode === "keyable") {
       keyed = path.join(outDir, "presenter_keyed.mov");
       await chromaKeyToAlpha(raw_, keyed);
       log.info(`keyed presenter written: ${keyed}`);

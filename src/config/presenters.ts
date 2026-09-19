@@ -33,8 +33,8 @@ export const PresenterProfile = z.object({
   personality: z.string().default("engaged, direct, respects the viewer's time"),
   /** keyable: flat green backdrop keyed out by the Composer; styled: a real environment from background_style. */
   background_mode: z.enum(["keyable", "styled"]).default("keyable"),
-  /** HeyGen identity: a studio avatar / digital twin id, or a talking photo id. Absent → the reference image is uploaded as a talking photo once and cached. */
-  heygen: z.object({ avatar_id: z.string().optional(), talking_photo_id: z.string().optional() }).default({}),
+  /** HeyGen identity. CLI transport: look_id (ephemeral, resolved from group_id at runtime) or group_id. Legacy REST transport: avatar_id / talking_photo_id. */
+  heygen: z.object({ look_id: z.string().optional(), group_id: z.string().optional(), avatar_id: z.string().optional(), talking_photo_id: z.string().optional() }).default({}),
 });
 export type PresenterProfile = z.infer<typeof PresenterProfile>;
 
