@@ -6,7 +6,7 @@
     "male voice",
     "the male voice"
   ],
-  "provider": "voicestudio",
+  "provider": "heygen",
   "voice_id": "default",
   "model": "tts-1",
   "style": "warm, steady male narration",

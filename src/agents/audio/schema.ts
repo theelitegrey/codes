@@ -98,7 +98,7 @@ export type PerformancePlan = z.infer<typeof PerformancePlan>;
 export const AudioTimeline = z.object({
   duration_sec: z.number(),
   beats: z.array(z.object({ beat_id: z.string(), planned_start: z.number(), planned_end: z.number(), start: z.number(), end: z.number(), tempo_applied: z.number().default(1) })),
-  lines: z.array(z.object({ beat_id: z.string(), index: z.number(), text: z.string(), start: z.number(), end: z.number(), pause_after_ms: z.number() })),
+  lines: z.array(z.object({ beat_id: z.string(), index: z.number(), text: z.string(), start: z.number(), end: z.number(), pause_after_ms: z.number(), /** Absolute word timings when the voice provider returned them. */ words: z.array(z.object({ text: z.string(), start: z.number(), end: z.number() })).optional() })),
   sfx: z.array(SfxCue.extend({ file: z.string(), procedural: z.boolean() })),
   music: z.object({ file: z.string().nullable(), base_gain_db: z.number(), duck_db: z.number() }),
 });

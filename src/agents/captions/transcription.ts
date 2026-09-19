@@ -72,11 +72,16 @@ export class LineTimingTranscriber implements Transcriber {
   readonly name = "line_timing" as const;
   constructor(private readonly timeline: AudioTimeline) {}
   async available() {
-    return this.timeline.lines.length ? { ok: true, detail: `${this.timeline.lines.length} timed lines` } : { ok: false, detail: "audio timeline has no lines" };
+    const exact = this.timeline.lines.filter((l) => l.words?.length).length;
+    return this.timeline.lines.length ? { ok: true, detail: `${this.timeline.lines.length} timed lines${exact ? ` (${exact} with provider word timestamps)` : ""}` } : { ok: false, detail: "audio timeline has no lines" };
   }
   async transcribe(): Promise<TranscriptionResult> {
     const words: CaptionWord[] = [];
     for (const l of this.timeline.lines) {
+      if (l.words?.length) {
+        for (const w of l.words) words.push({ text: w.text, start: w.start, end: w.end, emphasis: false });
+        continue;
+      }
       const toks = l.text.split(/\s+/).filter(Boolean);
       const weights = toks.map((t) => Math.max(2, t.replace(/[^\p{L}\p{N}]/gu, "").length + 1));
       const total = weights.reduce((a, b) => a + b, 0);

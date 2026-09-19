@@ -6,7 +6,7 @@ import { log } from "../../core/log.js";
 import { PresenterProfileStore, type PresenterProfile } from "../../config/presenters.js";
 import { getModePreset } from "../../presets/modes.js";
 import { createAvatarProvider } from "../../providers/avatar/index.js";
-import type { AvatarVideoProvider } from "../../providers/avatar/AvatarVideoProvider.js";
+import type { AvatarVideoProvider, AvatarGenerationRequest } from "../../providers/avatar/AvatarVideoProvider.js";
 import { run, ffmpegBin, probe } from "../../media/ffmpeg.js";
 import { PresenterAgentInput, PresenterPlan, PresenterOutput, KEY_COLOR, type BeatPresenter } from "./schema.js";
 
@@ -71,17 +71,25 @@ export class PresenterAgent {
       return { plan, video: null, status: "provider_unavailable", detail: h.detail };
     }
     const style = this.profiles.loadStyle();
-    const r = await this.avatar.generate({
+    const caps = this.avatar.capabilities();
+    // Prefer a square or portrait source for the lower panel when the provider can produce one.
+    const aspect = (["1:1", "9:16", "16:9"] as const).find((a) => caps.native_aspect_ratios.includes(a)) ?? caps.native_aspect_ratios[0] ?? "16:9";
+    const resolution = caps.resolutions.includes(style.resolution) ? style.resolution : caps.resolutions[caps.resolutions.length - 1];
+    const genReq: AvatarGenerationRequest & { profileHints?: unknown; backgroundColor?: string } = {
       referenceImage: this.profiles.referenceImagePath(profile),
       audioPath: input.narration_path,
       prompt: plan.shot.prompt,
       negativePrompt: style.negative_prompt,
       outDir,
       durationSec: input.audio_timeline.duration_sec,
-      resolution: style.resolution,
-      aspectRatio: "16:9",
-      onLog: (l) => process.stdout.write(l),
-    });
+      resolution,
+      aspectRatio: aspect,
+      onLog: (l: string) => process.stdout.write(l),
+      // Provider-specific extras (ignored by providers that do not use them).
+      profileHints: profile.heygen,
+      backgroundColor: plan.shot.background_mode === "keyable" ? KEY_COLOR.hex.replace("0x", "#") : undefined,
+    };
+    const r = await this.avatar.generate(genReq);
     const raw_ = path.join(outDir, "presenter.mp4");
     if (path.resolve(r.path) !== path.resolve(raw_)) fs.copyFileSync(r.path, raw_);
     let keyed: string | null = null;
@@ -90,7 +98,7 @@ export class PresenterAgent {
       await chromaKeyToAlpha(raw_, keyed);
       log.info(`keyed presenter written: ${keyed}`);
     }
-    const out: PresenterOutput = { plan, video: { raw: raw_, keyed, width: r.width, height: r.height, fps: r.fps, duration_sec: r.duration_sec, provider: r.provider }, status: "generated", detail: `${r.width}x${r.height} @ ${r.fps}fps, ${r.duration_sec.toFixed(1)}s` };
+    const out: PresenterOutput = { plan, video: { raw: raw_, keyed, width: r.width, height: r.height, fps: r.fps, duration_sec: r.duration_sec, provider: r.provider }, status: "generated", detail: `${r.provider} ${r.width}x${r.height} @ ${r.fps}fps, ${r.duration_sec.toFixed(1)}s` };
     fs.writeFileSync(path.join(outDir, "presenter_output.json"), JSON.stringify(out, null, 2));
     return out;
   }

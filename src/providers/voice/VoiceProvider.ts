@@ -35,6 +35,8 @@ export interface SynthesisResult {
   format: string;
   provider: string;
   voice_id: string;
+  /** Word-level timings relative to this clip, when the provider returns them (HeyGen does). */
+  words?: TranscriptionWord[];
 }
 
 export interface TranscriptionWord {

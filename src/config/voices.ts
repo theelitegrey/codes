@@ -13,11 +13,12 @@ export const VoiceConfig = z.object({
   /** Natural-language aliases: "default male voice", "energetic male voice". */
   aliases: z.array(z.string()).default([]),
   /** Which VoiceProvider implementation should render this voice. */
-  provider: z.enum(["voicestudio", "local"]).default("voicestudio"),
+  provider: z.enum(["heygen", "voicestudio", "local"]).default("heygen"),
   /**
-   * Provider-specific voice identifier. For VoiceStudio this is a voice/profile
-   * id from GET /v1/audio/voices, the literal "default", or a KittenTTS preset
-   * name. Discover ids with `shorts voices list`.
+   * Provider-specific voice identifier. HeyGen: a voice_id from GET /v2/voices
+   * ("default" picks the first English voice matching the gender trait).
+   * VoiceStudio: a voice/profile id from GET /v1/audio/voices or "default".
+   * Discover ids with `shorts voices discover --provider heygen`.
    */
   voice_id: z.string().default("default"),
   /** VoiceStudio engine id ("omnivoice", "voxcpm2", "cosyvoice", "mlx-audio", "kittentts", "moss-tts-nano") or alias "tts-1". */

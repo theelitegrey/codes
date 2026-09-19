@@ -6,7 +6,7 @@
     "default voice",
     "narrator"
   ],
-  "provider": "voicestudio",
+  "provider": "heygen",
   "voice_id": "default",
   "model": "tts-1",
   "style": "clear, conversational narration",

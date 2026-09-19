@@ -141,7 +141,7 @@ export class AudioAgent {
     const provider = this.providerFor(voice);
     const linesDir = path.join(outDir, "lines");
     ensureDir(linesDir);
-    const rendered: Array<{ beat_id: string; index: number; text: string; path: string; pauseAfterSec: number; tempo: number }> = [];
+    const rendered: Array<{ beat_id: string; index: number; text: string; path: string; pauseAfterSec: number; tempo: number; words?: Array<{ word: string; start: number; end: number }> }> = [];
     for (const pb of plan.beats) {
       const beat = input.script.beats.find((b) => b.id === pb.beat_id)!;
       const beatLines: typeof rendered = [];
@@ -150,7 +150,7 @@ export class AudioAgent {
         const file = path.join(linesDir, `${pb.beat_id}_${String(i + 1).padStart(2, "0")}.${voice.output_format}`);
         const lineVoice: VoiceConfig = { ...voice, speaking_speed: clamp(voice.speaking_speed * pb.speed, 0.5, 2), emotion: [voice.emotion, l.delivery].filter(Boolean).join("; ") };
         const r = await provider.synthesize({ text: l.text, voice: lineVoice, outPath: file });
-        beatLines.push({ beat_id: pb.beat_id, index: i, text: l.text, path: r.path, pauseAfterSec: l.pause_after_ms / 1000, tempo: 1 });
+        beatLines.push({ beat_id: pb.beat_id, index: i, text: l.text, path: r.path, pauseAfterSec: l.pause_after_ms / 1000, tempo: 1, words: r.words });
         log.info(`${pb.beat_id} line ${i + 1}: ${r.duration_sec.toFixed(2)}s "${l.text.slice(0, 50)}"`);
       }
       // Fit: if the beat overruns its window by > 5 %, first trim pauses, then apply a mild tempo (≤ 1.12).
@@ -188,7 +188,7 @@ export class AudioAgent {
       const end = idx.length ? ends[last] + rendered[last].pauseAfterSec : start;
       return { beat_id: b.id, planned_start: b.start, planned_end: b.end, start, end, tempo_applied: idx.length ? rendered[idx[0]].tempo : 1 };
     });
-    const lines: AudioTimeline["lines"] = rendered.map((r, i) => ({ beat_id: r.beat_id, index: r.index, text: r.text, start: starts[i], end: ends[i], pause_after_ms: Math.round(r.pauseAfterSec * 1000) }));
+    const lines: AudioTimeline["lines"] = rendered.map((r, i) => ({ beat_id: r.beat_id, index: r.index, text: r.text, start: starts[i], end: ends[i], pause_after_ms: Math.round(r.pauseAfterSec * 1000), words: r.words?.map((w) => ({ text: w.word, start: starts[i] + w.start / r.tempo, end: starts[i] + w.end / r.tempo })) }));
     return { narration, timeline: { duration_sec: total, beats, lines, sfx: [], music: { file: null, base_gain_db: 0, duck_db: 0 } } };
   }
 }

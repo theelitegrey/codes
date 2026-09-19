@@ -34,10 +34,10 @@ USER → DIRECTOR → SCRIPT → (TEXT ‖ AUDIO ‖ MOTION) → PRESENTER → I
 |---|---|---|
 | Script | Claude (research, hooks, timed beats, review) | `shorts agent script "<topic>"` |
 | Text | Claude (on-screen text hierarchy, chains, safe areas) | `shorts agent text script.json` |
-| Audio | Claude + VoiceStudio + FFmpeg (pauses, ducked music, SFX, loudness master) | `shorts agent audio script.json` |
+| Audio | Claude + **HeyGen TTS** (default; VoiceStudio/local alternatives) + FFmpeg (pauses, ducked music, SFX, loudness master) | `shorts agent audio script.json` |
 | Motion Graphics | Claude Fable 5.1 + Remotion component library | `shorts agent motion script.json --render` |
 | Illustration | Claude Fable 5.1 + model registry (diffusers / HF Inference / LongCat-Video) | `shorts agent illustration script.json` |
-| Presenter | LongCat-Video-Avatar-1.5 (from final narration, keyed alpha) | `shorts agent presenter script.json --audio out/audio` |
+| Presenter | **HeyGen avatar / talking photo** (default; LongCat alternative), driven by the final narration, keyed alpha | `shorts agent presenter script.json --audio out/audio` |
 | Captions | Claude Fable 5.1 + whisper.cpp / VoiceStudio timings | `shorts agent captions --audio out/audio --script script.json` |
 | Composer | Claude Fable 5.1 + Remotion + FFmpeg (master timeline, layout, QA) | `shorts agent compose <projectDir>` |
 | Director | runs all of the above into `output/projects/<id>/` | `shorts produce "<instruction>"` |
@@ -212,6 +212,7 @@ composition, FFmpeg finalize and QA end to end.
 
 | Service | Interface used | Automation | Key / license |
 |---|---|---|---|
+| HeyGen (default) | `/v3/voices/speech`, `/v2/voices`, `upload /v1/asset`, `upload /v1/talking_photo`, `/v2/video/generate` (audio-driven), `/v1/video_status.get` | hosted API | `HEYGEN_API_KEY`; paid plan, `HEYGEN_TEST_MODE` for watermarked tests |
 | LongCat-Video-Avatar-1.5 | `torchrun run_demo_avatar_single_audio_to_video.py --stage_1=ai2v --use_distill --model_type avatar-v1.5 [--use_int8]` with the documented input JSON | local GPU / SSH / custom command — **no hosted API exists** | none; weights MIT |
 | VoiceStudio | `GET /health`, `GET /v1/audio/voices`, `POST /v1/audio/speech`, `POST /v1/audio/transcriptions` on `localhost:3900` | local desktop app or Docker | `OMNIVOICE_API_KEY` only for non-loopback (`VOICESTUDIO_API_KEY`); app AGPL-3.0, engine models have own licenses |
 | Claude (agents) | Anthropic SDK, structured outputs, `web_search` server tool | API | `ANTHROPIC_API_KEY` |

@@ -6,7 +6,7 @@
     "energetic voice",
     "hype voice"
   ],
-  "provider": "voicestudio",
+  "provider": "heygen",
   "voice_id": "default",
   "model": "tts-1",
   "style": "fast, upbeat, punchy delivery for hooks",
