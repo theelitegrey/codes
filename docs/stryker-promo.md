@@ -42,6 +42,13 @@ npx tsx scripts/stryker-finalize.ts e917123993c30a386a83525c3919f0ac
 It polls the video to `completed`, downloads the webm with `HEYGEN_API_KEY`,
 and writes `output/stryker/stryker-final.mp4`.
 
+`scripts/stryker-final.sh` does the same with only ffmpeg and curl, for a
+machine with no checkout and no Node:
+
+```bash
+HEYGEN_API_KEY=sk_... ./stryker-final.sh stryker-graphics.mp4
+```
+
 ### How the overlay works
 
 `overlayPresenter` in `src/media/composite.ts` scales the square HeyGen clip to
