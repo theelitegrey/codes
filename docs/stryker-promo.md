@@ -29,25 +29,42 @@ instead (the file must live under `public/`):
 npx tsx scripts/stryker-promo.ts richard.webm   # -> output/stryker/stryker-final.mp4
 ```
 
-## Merging locally
+## Downloading the presenter and compositing
 
-Download the presenter webm from the HeyGen video page, then:
+One command, on any machine that can reach HeyGen:
 
 ```bash
-ffmpeg -i stryker-graphics.mp4 -c:v libvpx-vp9 -i richard.webm \
-  -filter_complex "[1:v]scale=1080:-1,format=yuva420p[p];[0:v][p]overlay=(W-w)/2:H-h:shortest=0[v]" \
-  -map "[v]" -map 1:a -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p \
-  -c:a aac -b:a 192k -movflags +faststart stryker-final.mp4
+npx tsx scripts/stryker-finalize.ts e917123993c30a386a83525c3919f0ac
+# or: npx tsx scripts/stryker-finalize.ts            # uses HEYGEN_VIDEO_ID
+# or: npx tsx scripts/stryker-finalize.ts ./richard.webm   # already downloaded
 ```
 
-The overlay anchors the presenter to the bottom edge; the lower 46% of the
-frame is reserved for them and carries a branded floor glow.
+It polls the video to `completed`, downloads the webm with `HEYGEN_API_KEY`,
+and writes `output/stryker/stryker-final.mp4`.
+
+### How the overlay works
+
+`overlayPresenter` in `src/media/composite.ts` scales the square HeyGen clip to
+*cover* the reserved band, crops the band off the bottom of the scaled frame so
+the head survives, anchors it to the bottom edge, and maps the master audio
+from the presenter clip. Two details are load-bearing:
+
+- **The decoder must be forced.** VP9 stores alpha in a WebM `BlockAdditional`
+  side-channel, flagged as `alpha_mode=1`. ffprobe still reports the stream as
+  `yuv420p`, and the native decoder discards the alpha, so the input needs
+  `-c:v libvpx-vp9` for `yuva420p` to come out.
+- **The first frame can decode fully transparent.** Sample any verification
+  frame past frame 0.
+
+`tests/composite.test.ts` covers both, plus the refusal to composite a
+presenter clip with no audio.
 
 ## Known limitation
 
-HeyGen's CDN hosts (`resource2.heygen.ai`, `files2.heygen.ai`) are blocked by
-the sandbox egress policy, so the presenter webm cannot be fetched here. The
-merge above is the one manual step.
+HeyGen's CDN hosts (`resource2.heygen.ai`, `files2.heygen.ai`) and
+`api.heygen.com` are blocked by this sandbox's egress policy, so the presenter
+webm cannot be fetched from inside it. The compositor itself is verified here
+against a synthetic VP9 alpha clip of the same geometry.
 
 ## Placeholders to confirm
 
